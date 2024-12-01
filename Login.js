@@ -34,7 +34,7 @@ export default function LoginScreen() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       Alert.alert('Successfully Logined.');
-      //navigation.navigate('Home'); // Redirect to Home or other screen after login
+      navigation.navigate('Home'); // Redirect to Home or other screen after login
     } catch (error) {
       Alert.alert('Login Failed.');
       //setError(error.message);
