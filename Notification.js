@@ -1,11 +1,13 @@
-import React from 'react';
-import { StyleSheet, View, Text, Image, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator } from 'react-native';
+import { collection, getDocs } from 'firebase/firestore';
+import { firestore } from './firebase.config'; // Import firestore from config
 
-const NotificationCard = ({ level, ppm, timestamp, color }) => (
+const NotificationCard = ({ level, ppm, datetime, color }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
     <View style={styles.textContainer}>
       <Text style={styles.level}>{level}</Text>
-      <Text style={styles.timestamp}>{timestamp}</Text>
+      <Text style={styles.datetime}>{datetime}</Text>
     </View>
     <View style={styles.ppmContainer}>
       <Text style={styles.ppm}>{ppm}</Text>
@@ -14,31 +16,56 @@ const NotificationCard = ({ level, ppm, timestamp, color }) => (
   </View>
 );
 
-const NotificationScreen = () => {
-  // Sample notifications
-  const notifications = [
-    {
-      id: '1',
-      level: 'MODERATE',
-      ppm: 250,
-      timestamp: 'Dec 01 | 11:00 AM',
-      color: '#FF8C00', // Moderate orange color
-    },
-    {
-      id: '2',
-      level: 'DANGEROUS',
-      ppm: 390,
-      timestamp: 'Dec 01 | 11:00 AM',
-      color: '#FF0000', // Dangerous red color
-    },
-    {
-      id: '3',
-      level: 'DANGEROUS',
-      ppm: 332,
-      timestamp: 'Dec 01 | 11:00 AM',
-      color: '#FF0000', // Dangerous red color
-    },
-  ];
+const Notification = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch notifications from Firestore
+  const fetchNotifications = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(firestore, 'notifications')); // Fetch notifications
+      const notificationsList = [];
+
+      querySnapshot.forEach((doc) => {
+        const notificationData = doc.data();
+        notificationsList.push({
+          id: doc.id, // Document ID as key
+          level: notificationData.level,
+          ppm: notificationData.ppm,
+          datetime: notificationData.datetime,
+          color: notificationData.color,
+        });
+      });
+
+      setNotifications(notificationsList); // Update state with fetched notifications
+    } catch (err) {
+      setError('Failed to fetch notifications');
+      console.error('Error fetching notifications: ', err);
+    } finally {
+      setLoading(false); // Turn off loading spinner
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications(); // Call the function when component mounts
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#007ACC" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -50,12 +77,12 @@ const NotificationScreen = () => {
       {/* Notifications List */}
       <FlatList
         data={notifications}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id} // Use the document ID as key
         renderItem={({ item }) => (
           <NotificationCard
             level={item.level}
             ppm={item.ppm}
-            timestamp={item.timestamp}
+            datetime={item.datetime}
             color={item.color}
           />
         )}
@@ -98,7 +125,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginVertical: 10,
-    marginHorizontal:10,
+    marginHorizontal: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -113,7 +140,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
   },
-  timestamp: {
+  datetime: {
     fontSize: 14,
     color: '#fff',
     marginTop: 5,
@@ -133,4 +160,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NotificationScreen;
+export default Notification;
