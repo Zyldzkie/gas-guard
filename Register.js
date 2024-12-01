@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Import the icon library
+import { auth, firestore } from './firebase.config';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function RegisterScreen() {
   // State variables to store user inputs
@@ -13,8 +16,8 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Function to handle registration
-  const handleRegister = () => {
+    // Function to handle registration
+  const handleRegister = async () => {
     if (!firstName || !lastName || !email || !mobileNumber || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -23,9 +26,40 @@ export default function RegisterScreen() {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    console.log('User Registered:', { firstName, lastName, email, mobileNumber });
+    
+    try {
+      // Register user with Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create a reference to the users collection and the specific user document
+      const userDocRef = doc(firestore, 'users', user.uid);
+      
+      // Save additional data (username) to Firestore
+      await setDoc(userDocRef, {
+        firstname: firstName,
+        lastname: lastName,
+        email: email,
+        mobileNumber: mobileNumber,
+        createdAt: new Date().toISOString(), // Convert Date to string for Firestore
+      });
+
+      Alert.alert('Success', 'Registration successful');
+      // You can navigate to another screen here after registration
+
+      navigation.navigate('Login');
+
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', error.message);
+    }
+
     Alert.alert('Success', 'Registration successful!');
   };
+
+
+
+  
 
   return (
     <View style={styles.container}>
