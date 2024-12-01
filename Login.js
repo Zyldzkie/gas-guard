@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } fro
 import { useNavigation } from '@react-navigation/native';
 import { auth, firestore } from './firebase.config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 export default function LoginScreen() {
   // State variables to store email and password
@@ -10,7 +11,20 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
 
-  // Function to handle login (example)
+  const handlePasswordReset = async () => {
+    if (email === '') {
+      Alert.alert('Error', 'Please fill the email Field.');
+      return;
+    }
+    
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Alert.alert('Password reset link has been sent to your email.');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
   const handleLogin = async() => {
     if (email === '' || password === '') {
       Alert.alert('Error', 'Please fill in both fields');
@@ -58,7 +72,7 @@ export default function LoginScreen() {
       />
 
       {/* Forgot Password */}
-      <TouchableOpacity>
+      <TouchableOpacity onPress={handlePasswordReset}>
         <Text style={styles.forgotPassword}>Forgot Password ?</Text>
       </TouchableOpacity>
 
