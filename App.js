@@ -1,45 +1,20 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import HomeScreen from './Home';
-import NotificationScreen from './Notification';
-import ProfileScreen from './Profile';
+import { createStackNavigator } from '@react-navigation/stack';
+import LoginScreen from './Login';
+import RegisterScreen from './Register';
+import HomeScreen from './Home'; // This is your bottom navigation container.
 
-const Tab = createBottomTabNavigator();
+
+const Stack = createStackNavigator();
 
 function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: { backgroundColor: '#007ACC', borderTopLeftRadius: 15, borderTopRightRadius: 15, height: 60 },
-          tabBarActiveTintColor: '#fff',
-          tabBarInactiveTintColor: '#bdd5e5',
-        }}
-      >
-        <Tab.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <FontAwesome name="home" size={size} color={color} />,
-          }}
-        />
-        <Tab.Screen
-          name="Notification"
-          component={NotificationScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <MaterialIcons name="notifications" size={size} color={color} />,
-          }}
-        />
-        <Tab.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{
-            tabBarIcon: ({ color, size }) => <FontAwesome name="user" size={size} color={color} />,
-          }}
-        />
-      </Tab.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
