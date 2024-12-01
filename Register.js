@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Import the icon library
+import { useNavigation } from '@react-navigation/native';
 import { auth, firestore } from './firebase.config';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -15,6 +16,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigation = useNavigation();
 
     // Function to handle registration
   const handleRegister = async () => {
@@ -30,10 +32,12 @@ export default function RegisterScreen() {
     try {
       // Register user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      //const user = userCredential.user;
+
+
 
       // Create a reference to the users collection and the specific user document
-      const userDocRef = doc(firestore, 'users', user.uid);
+      const userDocRef = doc(firestore, 'users', email);
       
       // Save additional data (username) to Firestore
       await setDoc(userDocRef, {

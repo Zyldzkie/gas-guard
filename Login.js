@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { auth, firestore } from './firebase.config';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginScreen() {
   // State variables to store email and password
@@ -9,15 +11,22 @@ export default function LoginScreen() {
   const navigation = useNavigation();
 
   // Function to handle login (example)
-  const handleLogin = () => {
+  const handleLogin = async() => {
     if (email === '' || password === '') {
       Alert.alert('Error', 'Please fill in both fields');
       return;
     }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      Alert.alert('Successfully Logined.');
+      //navigation.navigate('Home'); // Redirect to Home or other screen after login
+    } catch (error) {
+      Alert.alert('Login Failed.');
+      //setError(error.message);
+    }
     // Here you can send the email and password to your database
-    console.log('Email:', email);
-    console.log('Password:', password);
-    Alert.alert('Login', 'Login successful!');
+    
   };
 
   return (
