@@ -3,60 +3,66 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } fro
 import { useNavigation } from '@react-navigation/native';
 
 export default function LoginScreen() {
+  // State variables to store email and password
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
 
+  // Function to handle login (example)
   const handleLogin = () => {
     if (email === '' || password === '') {
       Alert.alert('Error', 'Please fill in both fields');
       return;
     }
-
-    // Simulating a successful login
+    // Here you can send the email and password to your database
     console.log('Email:', email);
     console.log('Password:', password);
     Alert.alert('Login', 'Login successful!');
-
-    // Navigate to Home screen after login
-    navigation.navigate('Home');
   };
 
   return (
     <View style={styles.container}>
+      {/* Logo */}
       <Image source={require('./assets/logo.png')} style={styles.logo} />
+
+      {/* Title */}
       <Text style={styles.title}>Sign in to your Account</Text>
-      
+
+      {/* Email Input */}
       <TextInput
         style={styles.input}
         placeholder="Email"
         placeholderTextColor="#aaa"
         keyboardType="email-address"
-        value={email}
-        onChangeText={(text) => setEmail(text)}
+        value={email} // Bind state to the input
+        onChangeText={(text) => setEmail(text)} // Update state on change
       />
-      
+
+      {/* Password Input */}
       <TextInput
         style={styles.input}
         placeholder="Password"
         placeholderTextColor="#aaa"
         secureTextEntry={true}
-        value={password}
-        onChangeText={(text) => setPassword(text)}
+        value={password} // Bind state to the input
+        onChangeText={(text) => setPassword(text)} // Update state on change
       />
 
+      {/* Forgot Password */}
       <TouchableOpacity>
         <Text style={styles.forgotPassword}>Forgot Password ?</Text>
       </TouchableOpacity>
 
+      {/* Login Button */}
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Login</Text>
       </TouchableOpacity>
 
+      {/* Sign Up Link */}
       <View style={styles.signUpContainer}>
         <Text style={styles.signUpText}>Don't have an account? </Text>
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.signUpLink}>Sign up</Text>
+            <Text style={styles.signUpLink}>Sign up</Text>
         </TouchableOpacity>
       </View>
     </View>
