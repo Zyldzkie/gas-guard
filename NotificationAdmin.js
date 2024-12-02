@@ -34,7 +34,7 @@ const NotificationAdminScreen = () => {
         const notificationData = doc.data();
         notificationsList.push({
           id: doc.id, // Document ID as key
-          user: notificationData.user,
+          user: notificationData.userEmail,
           level: notificationData.level,
           ppm: notificationData.ppm,
           datetime: notificationData.datetime,

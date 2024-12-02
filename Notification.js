@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { firestore } from './firebase.config'; // Import firestore from config
+import { getAuth } from 'firebase/auth'; // For getting current user email
 
 const NotificationCard = ({ level, ppm, datetime, color }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -21,10 +22,23 @@ const Notification = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch notifications from Firestore
   const fetchNotifications = async () => {
     try {
-      const querySnapshot = await getDocs(collection(firestore, 'notifications')); // Fetch notifications
+      const auth = getAuth(); // Initialize Firebase auth
+      const currentUserEmail = auth.currentUser?.email; // Get current user's email
+
+      if (!currentUserEmail) {
+        setError('User not logged in');
+        return;
+      }
+
+      // Query Firestore to get documents where userEmail matches current user's email
+      const notificationsQuery = query(
+        collection(firestore, 'notifications'),
+        where('userEmail', '==', currentUserEmail)
+      );
+
+      const querySnapshot = await getDocs(notificationsQuery); // Execute the query
       const notificationsList = [];
 
       querySnapshot.forEach((doc) => {
@@ -48,7 +62,7 @@ const Notification = () => {
   };
 
   useEffect(() => {
-    fetchNotifications(); // Call the function when component mounts
+    fetchNotifications(); // Fetch notifications on component mount
   }, []);
 
   if (loading) {
