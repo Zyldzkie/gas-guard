@@ -146,9 +146,7 @@ export default function RegisterScreen() {
         <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('LoginAdmin')}>
-          <Text style={styles.signUpLink}>Sign in as an Admin</Text>
-      </TouchableOpacity>
+      
     </View>
   );
 }
