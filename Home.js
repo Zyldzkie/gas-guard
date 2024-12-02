@@ -1,26 +1,77 @@
 // Home.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Notification from './Notification'; // Import Notification screen
 import Profile from './Profile'; // Import Profile screen
+import { ref, onValue } from 'firebase/database';
+import { db } from './firebase.config'; // Make sure you have this configuration file
+import { auth, firestore } from './firebase.config';
+import { doc, getDoc } from 'firebase/firestore';
+import { Alert } from 'react-native'; // Import Alert for error messages
 
 const Tab = createBottomTabNavigator();
 
 const HomeScreen = () => {
-  const [gasLevel, setGasLevel] = useState(109);
+  const [gasLevel, setGasLevel] = useState(0);
   const [levelStatus, setLevelStatus] = useState('');
 
   const classifyGasLevel = (level) => {
     if (level <= 100) {
-      return 'Safe';
+      return 'Normal';
     } else if (level <= 300) {
-      return 'Moderate';
+      return 'Warning';
     } else {
-      return 'Dangerous';
+      return 'Caution';
     }
   };
+
+  useEffect(() => {
+
+    console.log(auth.currentUser.email);
+
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'No user is logged in.');
+      return;
+    }
+
+    const fetchHardwareId = async () => {
+      try {
+        const userRef = doc(firestore, 'users', auth.currentUser.email);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists() ) {
+
+          console.log(userDoc.data().hardwareId);
+
+          const hardwareId = userDoc.data().hardwareId;
+          
+          const gasRef = ref(db, `${hardwareId}/gas_value`);
+
+          console.log(gasRef);
+          
+          const unsubscribe = onValue(gasRef, (snapshot) => {
+            const value = snapshot.val();
+            if (value !== null) {
+              console.log('New gas value received:', value);
+              setGasLevel(value);
+            }
+          }, (error) => {
+            console.error('Error fetching gas value:', error);
+          });
+
+          return unsubscribe;
+        } else {
+          console.error('No hardware ID found for user');
+        }
+      } catch (error) {
+        console.error('Error fetching hardware ID:', error);
+      }
+    };
+
+    fetchHardwareId();
+  }, []);
 
   useEffect(() => {
     const status = classifyGasLevel(gasLevel);
