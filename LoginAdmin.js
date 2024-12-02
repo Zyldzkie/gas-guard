@@ -6,7 +6,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { sendEmailVerification } from 'firebase/auth';
 
-export default function LoginScreen() {
+export default function LoginAdminScreen() {
   // State variables to store email and password
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,7 +50,7 @@ export default function LoginScreen() {
   
       // Proceed if the email is verified
       Alert.alert('Successfully Logged In.');
-      navigation.navigate('Home'); // Redirect to Home or other screen after login
+      navigation.navigate('NotificationAdmin');
     } catch (error) {
       console.error(error);
       Alert.alert('Login Failed.', error.message);
@@ -63,7 +63,7 @@ export default function LoginScreen() {
       <Image source={require('./assets/logo.png')} style={styles.logo} />
 
       {/* Title */}
-      <Text style={styles.title}>Sign in to your Account</Text>
+      <Text style={styles.title}>Sign in to your Admin Account</Text>
 
       {/* Email Input */}
       <TextInput
@@ -97,9 +97,9 @@ export default function LoginScreen() {
 
       {/* Sign Up Link */}
       <View style={styles.signUpContainer}>
-        <Text style={styles.signUpText}>Don't have an account? </Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.signUpLink}>Sign up</Text>
+        <Text style={styles.signUpText}>Regular user? </Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.signUpLink}>Go Back</Text>
         </TouchableOpacity>
       </View>
       
