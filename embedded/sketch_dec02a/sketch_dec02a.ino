@@ -27,9 +27,10 @@ void setup() {
   pinMode(yellowLedPin, OUTPUT);
   pinMode(greenLedPin, OUTPUT);
   pinMode(gasSensorPin, INPUT);
+
+  digitalWrite(greenLedPin, HIGH);
   
 
-  // Connect to Wi-Fi
   WiFi.begin(ssid, password);
   Serial.print("Connecting to Wifi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -58,34 +59,38 @@ void setup() {
 }
 
 void loop() {
-  if(Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 2000 || sendDataPrevMillis == 0)){
+  int sensorValue = analogRead(gasSensorPin);
+
+  if (sensorValue > threshold)
+  {
+    digitalWrite(redLedPin, HIGH);
+    digitalWrite(buzzerPin, HIGH);
+    delay(60000);
+    digitalWrite(buzzerPin, LOW);
+    digitalWrite(redLedPin, LOW);
+  }
+
+
+  if(Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > checkIntervalMilli || sendDataPrevMillis == 0)){
     sendDataPrevMillis = millis();
-
-
-    // FOR TESTING // REMOVE AFTER TESTING
-    if(Firebase.RTDB.getBool(&fbdo, "/" + hardwareId + "/buzzer"))
-    {
-       if(fbdo.dataType() == "boolean") 
-       {
-          buzzerStatus = fbdo.boolData();
-          Serial.println("Successful READ from " + fbdo.dataPath() + ": " + String(ledstatus) + " {" + fbdo.dataType() + "}");
-      
-          if (buzzerStatus == true) {
-            digitalWrite(buzzerPin, HIGH);  
-          } else {
-            digitalWrite(buzzerPin, LOW);   
-          }
-       }
-        
-    }
-
-    int sensorValue = analogRead(gasSensorPin);
+    digitalWrite(yellowLedPin, HIGH);
+    
     if (Firebase.RTDB.setInt(&fbdo, "/" + hardwareId + "/gas_value", sensorValue)) {
+
       Serial.print("Gas value has been updated: ");
       Serial.println(sensorValue);
+
+      Firebase.RTDB.setBool(&fbdo, "/" + hardwareId + "/status", true);
+
     } else {
       Serial.print("Failed to update gas value. Error: ");
       Serial.println(fbdo.errorReason());
+
+      Firebase.RTDB.setBool(&fbdo, "/" + hardwareId + "/status", false);
     }  
+  }
+  else
+  {
+    digitalWrite(yellowLedPin, LOW);
   }
 }
