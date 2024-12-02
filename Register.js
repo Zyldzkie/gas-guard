@@ -32,7 +32,7 @@ export default function RegisterScreen() {
     try {
       // Register user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      //const user = userCredential.user;
+      const user = userCredential.user;
 
       await sendEmailVerification(user);
 
@@ -48,19 +48,17 @@ export default function RegisterScreen() {
         email: email,
         mobileNumber: mobileNumber,
         createdAt: new Date().toISOString(), // Convert Date to string for Firestore
+        hardwareId: null,
+        isAdmin: false,
       });
 
       Alert.alert('Success', 'Registration successful');
-      // You can navigate to another screen here after registration
-
       navigation.navigate('Login');
 
     } catch (error) {
       console.error(error);
       Alert.alert('Error', error.message);
     }
-
-    Alert.alert('Success', 'Registration successful!');
   };
 
 
