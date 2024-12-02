@@ -55,6 +55,7 @@ const HomeScreen = () => {
           });
 
           // Fetch connection status
+          const statusRef = ref(db, `${fetchedHardwareId}/status`); // Define statusRef
           const unsubscribeStatus = onValue(statusRef, (snapshot) => {
             const status = snapshot.val();
             setConnectionStatus(status === true ? 'Online' : 'Offline');
@@ -94,7 +95,7 @@ const HomeScreen = () => {
 
       // Set up new realtime database listeners with updated hardwareId
       const gasRef = ref(db, `${hardwareId}/gas_value`);
-      const statusRef = ref(db, `${hardwareId}/status`);
+      const statusRef = ref(db, `${hardwareId}/status`); // Define statusRef
 
       // Update gas level listener
       onValue(gasRef, (snapshot) => {
