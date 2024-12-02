@@ -1,6 +1,5 @@
-// Home.js
-import React, { useState, useEffect, useContext } from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, Button, Image } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Notification from './Notification'; // Import Notification screen
@@ -16,6 +15,9 @@ const Tab = createBottomTabNavigator();
 const HomeScreen = () => {
   const [gasLevel, setGasLevel] = useState(0);
   const [levelStatus, setLevelStatus] = useState('');
+  const [hardwareId, setHardwareId] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('Offline'); // Default to offline
+  const [isEditing, setIsEditing] = useState(false);
 
   const classifyGasLevel = (level) => {
     if (level <= 100) {
@@ -28,9 +30,6 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-
-    console.log(auth.currentUser.email);
-
     if (!auth.currentUser) {
       Alert.alert('Error', 'No user is logged in.');
       return;
@@ -40,28 +39,32 @@ const HomeScreen = () => {
       try {
         const userRef = doc(firestore, 'users', auth.currentUser.email);
         const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists() ) {
 
-          console.log(userDoc.data().hardwareId);
+        if (userDoc.exists()) {
+          const fetchedHardwareId = userDoc.data().hardwareId;
+          setHardwareId(fetchedHardwareId);
 
-          const hardwareId = userDoc.data().hardwareId;
-          
-          const gasRef = ref(db, `${hardwareId}/gas_value`);
+          const gasRef = ref(db, `${fetchedHardwareId}/gas_value`);
+          const statusRef = ref(db, `${fetchedHardwareId}/status`);
 
-          console.log(gasRef);
-          
-          const unsubscribe = onValue(gasRef, (snapshot) => {
+          // Fetch gas level
+          const unsubscribeGas = onValue(gasRef, (snapshot) => {
             const value = snapshot.val();
             if (value !== null) {
-              console.log('New gas value received:', value);
               setGasLevel(value);
             }
-          }, (error) => {
-            console.error('Error fetching gas value:', error);
           });
 
-          return unsubscribe;
+          // Fetch connection status
+          const unsubscribeStatus = onValue(statusRef, (snapshot) => {
+            const status = snapshot.val();
+            setConnectionStatus(status === true ? 'Online' : 'Offline');
+          });
+
+          return () => {
+            unsubscribeGas();
+            unsubscribeStatus();
+          };
         } else {
           console.error('No hardware ID found for user');
         }
@@ -78,6 +81,10 @@ const HomeScreen = () => {
     setLevelStatus(status);
   }, [gasLevel]);
 
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
+
   return (
     <View style={styles.container}>
       <Image source={require('./assets/logo.png')} style={styles.logo} />
@@ -90,6 +97,24 @@ const HomeScreen = () => {
       <Text style={styles.level}>
         Level: <Text style={[styles.status, styles[levelStatus.toLowerCase()]]}>{levelStatus}</Text>
       </Text>
+      <Text style={styles.connectionStatus}>
+        Connection Status: <Text style={{ fontWeight: 'bold', color: connectionStatus === 'Online' ? 'green' : 'red' }}>{connectionStatus}</Text>
+      </Text>
+      <View style={styles.hardwareContainer}>
+        <TextInput
+          style={styles.hardwareInput}
+          value={hardwareId}
+          editable={isEditing}
+          onChangeText={(text) => setHardwareId(text)}
+        />
+        <View style={styles.buttonWrapper}>
+          <Button
+            title={isEditing ? 'Save' : 'Edit'}
+            onPress={toggleEdit}
+            color="#fff" // Text color for the button
+          />
+        </View>
+      </View>
     </View>
   );
 };
@@ -181,18 +206,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
-  status: {
+  connectionStatus: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginVertical: 10,
+    marginTop: 100,
   },
-  safe: {
-    color: 'green',
+  hardwareContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    paddingHorizontal:20,
   },
-  moderate: {
-    color: 'orange',
+  hardwareInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: 10,
+    marginRight: 10,
+    flex: 1,
+    borderRadius: 5,
+    backgroundColor: '#fff',
   },
-  dangerous: {
-    color: 'red',
+  buttonWrapper: {
+    backgroundColor: '#007ACC', // Blue background color
+    borderRadius: 8, // Rounded corners
+    overflow: 'hidden', // Ensures the button stays inside the wrapper
+    paddingHorizontal: 10, // Adjust horizontal padding
   },
   tabBar: {
     backgroundColor: '#007ACC',
