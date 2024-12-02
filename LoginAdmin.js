@@ -102,6 +102,8 @@ export default function LoginAdminScreen() {
             <Text style={styles.signUpLink}>Go Back</Text>
         </TouchableOpacity>
       </View>
+
+      
       
     </View>
   );

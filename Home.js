@@ -111,7 +111,7 @@ const HomeScreen = () => {
           <Button
             title={isEditing ? 'Save' : 'Edit'}
             onPress={toggleEdit}
-            color="#fff" // Text color for the button
+            color="#007ACC" 
           />
         </View>
       </View>
@@ -228,7 +228,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   buttonWrapper: {
-    backgroundColor: '#007ACC', // Blue background color
     borderRadius: 8, // Rounded corners
     overflow: 'hidden', // Ensures the button stays inside the wrapper
     paddingHorizontal: 10, // Adjust horizontal padding

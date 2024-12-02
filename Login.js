@@ -101,7 +101,13 @@ export default function LoginScreen() {
         <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text style={styles.signUpLink}>Sign up</Text>
         </TouchableOpacity>
+
+        
       </View>
+
+      <TouchableOpacity onPress={() => navigation.navigate('LoginAdmin')}>
+          <Text style={styles.signUpAdminLink}>Sign in as an Admin</Text>
+      </TouchableOpacity>
       
     </View>
   );
@@ -138,7 +144,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     alignSelf: 'flex-end',
-    color: '#007bff',
+    color: '#007ACC',
     marginVertical: 10,
   },
   loginButton: {
@@ -165,5 +171,10 @@ const styles = StyleSheet.create({
   signUpLink: {
     color: '#ff0000',
     fontWeight: 'bold',
+  },
+  signUpAdminLink: {
+    color: '#007ACC',
+    fontWeight: 'bold',
+    marginTop:20,
   },
 });
