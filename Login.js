@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { auth, firestore } from './firebase.config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendEmailVerification } from 'firebase/auth';
 
 export default function LoginScreen() {
   // State variables to store email and password
@@ -25,22 +26,35 @@ export default function LoginScreen() {
     }
   };
 
-  const handleLogin = async() => {
+  const handleLogin = async () => {
     if (email === '' || password === '') {
       Alert.alert('Error', 'Please fill in both fields');
       return;
     }
-
+  
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert('Successfully Logined.');
+      // Sign in the user
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      // Check if the user's email is verified
+      if (!user.emailVerified) {
+        // Send verification email
+        await sendEmailVerification(user);
+        Alert.alert(
+          'Verify Your Email',
+          'Your email is not verified. A verification link has been sent to your email. Please verify your email before logging in.'
+        );
+        return;
+      }
+  
+      // Proceed if the email is verified
+      Alert.alert('Successfully Logged In.');
       navigation.navigate('Home'); // Redirect to Home or other screen after login
     } catch (error) {
-      Alert.alert('Login Failed.');
-      //setError(error.message);
+      console.error(error);
+      Alert.alert('Login Failed.', error.message);
     }
-    // Here you can send the email and password to your database
-    
   };
 
   return (
