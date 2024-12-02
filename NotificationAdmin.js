@@ -77,7 +77,7 @@ const NotificationAdminScreen = () => {
     <View style={styles.container}>
       {/* Logo */}
       <Image source={require('./assets/logo.png')} style={styles.logo} />
-      <Text style={styles.title}>Notifications</Text>
+      <Text style={styles.title}>Admin Notifications</Text>
       <View style={styles.divider} />
 
       {/* Notifications List */}

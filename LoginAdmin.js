@@ -5,6 +5,7 @@ import { auth, firestore } from './firebase.config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { sendEmailVerification } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function LoginAdminScreen() {
   // State variables to store email and password
@@ -48,7 +49,15 @@ export default function LoginAdminScreen() {
         return;
       }
   
-      // Proceed if the email is verified
+      // Check if the user is an admin
+      const userDocRef = doc(firestore, 'users', email);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists() || !userDoc.data().isAdmin) {
+        Alert.alert('Access Denied', 'You are not an admin.');
+        return;
+      }
+  
+      // Proceed if the email is verified and the user is an admin
       Alert.alert('Successfully Logged In.');
       navigation.navigate('NotificationAdmin');
     } catch (error) {
