@@ -1,36 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
-import { auth, firestore } from './firebase.config'; // Ensure correct Firebase setup
-import * as ImagePicker from 'expo-image-picker';
+import { auth, firestore } from './firebase.config'; // Import Firebase configuration
+import { doc, getDoc, setDoc } from 'firebase/firestore'; // Modular Firestore methods
+import * as ImagePicker from 'expo-image-picker'; // For picking images
 
 const Profile = () => {
   const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150'); // Default image
   const [name, setName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [email, setEmail] = useState('');
-  const userId = auth.currentUser?.uid; // Get the logged-in user's ID
 
-  useEffect(() => {
-    // Fetch user data from Firestore
-    const fetchUserData = async () => {
-      try {
-        const userDoc = await firestore.collection('users').doc(userId).get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          setProfileImage(userData.profileImage || 'https://via.placeholder.com/150'); // Default if empty
-          setName(userData.name || '');
-          setMobileNumber(userData.mobileNumber || '');
-          setEmail(userData.email || '');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        Alert.alert('Error', 'Unable to fetch profile data.');
+  // Fetch user data from Firestore
+  const fetchUserData = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'No user is logged in.');
+      return;
+    }
+
+    const userEmail = auth.currentUser.email; // Get logged-in user's email
+    try {
+      const userRef = doc(firestore, 'users', userEmail); // Firestore reference
+      const userDoc = await getDoc(userRef); // Fetch the document
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setName(`${userData.firstname} ${userData.lastname}` || '');
+        setMobileNumber(userData.mobileNumber || '');
+        setEmail(userData.email || '');
+        setProfileImage(userData.profileImage || 'https://via.placeholder.com/150');
+      } else {
+        Alert.alert('Error', 'User profile not found in the database.');
       }
-    };
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      Alert.alert('Error', 'Unable to fetch profile data.');
+    }
+  };
 
-    fetchUserData();
-  }, [userId]);
-
+  // Handle image picking
   const handleImagePick = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -40,22 +47,31 @@ const Profile = () => {
     });
 
     if (!result.canceled) {
-      console.log('Selected Image URI:', result.assets[0].uri); // Debugging
-      setProfileImage(result.assets[0].uri); // Set picked image
+      setProfileImage(result.assets[0].uri); // Update profile image
     } else {
       console.log('Image picking was canceled');
     }
   };
 
+  // Handle saving the updated profile to Firestore
   const handleSave = async () => {
+    if (!auth.currentUser) {
+      Alert.alert('Error', 'No user is logged in.');
+      return;
+    }
+
+    const userEmail = auth.currentUser.email; // Get logged-in user's email
     try {
-      await firestore.collection('users').doc(userId).set(
+      const userRef = doc(firestore, 'users', userEmail); // Firestore reference
+      await setDoc(
+        userRef,
         {
           profileImage,
-          name,
+          firstname: name.split(' ')[0], // Split name to extract first name
+          lastname: name.split(' ')[1] || '', // Handle last name
           mobileNumber,
         },
-        { merge: true } // Only update the specified fields
+        { merge: true } // Merge new fields with existing data
       );
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (error) {
@@ -63,6 +79,10 @@ const Profile = () => {
       Alert.alert('Error', 'Unable to update profile.');
     }
   };
+
+  useEffect(() => {
+    fetchUserData(); // Fetch user data when the component loads
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -107,7 +127,7 @@ const Profile = () => {
         <TextInput
           style={styles.input}
           value={email}
-          editable={false}
+          editable={false} // Email field is read-only
         />
       </View>
 
@@ -154,9 +174,9 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#ddd', 
-    borderWidth: 3, 
-    borderColor: '#007ACC',  
+    backgroundColor: '#ddd',
+    borderWidth: 3,
+    borderColor: '#007ACC',
   },
   editPhotoText: {
     color: '#007BFF',

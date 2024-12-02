@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } fro
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Import the icon library
 import { useNavigation } from '@react-navigation/native';
 import { auth, firestore } from './firebase.config';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification   } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
 export default function RegisterScreen() {
@@ -33,6 +33,8 @@ export default function RegisterScreen() {
       // Register user with Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       //const user = userCredential.user;
+
+      await sendEmailVerification(user);
 
 
 
