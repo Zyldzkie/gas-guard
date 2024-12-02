@@ -145,6 +145,10 @@ export default function RegisterScreen() {
       <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
         <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('LoginAdmin')}>
+          <Text style={styles.signUpLink}>Sign in as an Admin</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -213,6 +217,10 @@ const styles = StyleSheet.create({
   registerButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  signUpLink: {
+    color: '#ff0000',
     fontWeight: 'bold',
   },
 });
