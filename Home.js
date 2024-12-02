@@ -7,7 +7,7 @@ import Profile from './Profile'; // Import Profile screen
 import { ref, onValue } from 'firebase/database';
 import { db } from './firebase.config'; // Make sure you have this configuration file
 import { auth, firestore } from './firebase.config';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Alert } from 'react-native'; // Import Alert for error messages
 
 const Tab = createBottomTabNavigator();
@@ -45,7 +45,6 @@ const HomeScreen = () => {
           setHardwareId(fetchedHardwareId);
 
           const gasRef = ref(db, `${fetchedHardwareId}/gas_value`);
-          const statusRef = ref(db, `${fetchedHardwareId}/status`);
 
           // Fetch gas level
           const unsubscribeGas = onValue(gasRef, (snapshot) => {
@@ -85,6 +84,40 @@ const HomeScreen = () => {
     setIsEditing(!isEditing);
   };
 
+  const updateHardwareId = async () => {
+    try {
+      // Update Firestore
+      const userRef = doc(firestore, 'users', auth.currentUser.email);
+      await updateDoc(userRef, {
+        hardwareId: hardwareId
+      });
+
+      // Set up new realtime database listeners with updated hardwareId
+      const gasRef = ref(db, `${hardwareId}/gas_value`);
+      const statusRef = ref(db, `${hardwareId}/status`);
+
+      // Update gas level listener
+      onValue(gasRef, (snapshot) => {
+        const value = snapshot.val();
+        if (value !== null) {
+          setGasLevel(value);
+        }
+      });
+
+      // Update connection status listener
+      onValue(statusRef, (snapshot) => {
+        const status = snapshot.val();
+        setConnectionStatus(status === true ? 'Online' : 'Offline');
+      });
+
+      setIsEditing(false);
+      Alert.alert('Success', 'Hardware ID updated successfully');
+    } catch (error) {
+      console.error('Error updating hardware ID:', error);
+      Alert.alert('Error', 'Failed to update hardware ID');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Image source={require('./assets/logo.png')} style={styles.logo} />
@@ -110,7 +143,7 @@ const HomeScreen = () => {
         <View style={styles.buttonWrapper}>
           <Button
             title={isEditing ? 'Save' : 'Edit'}
-            onPress={toggleEdit}
+            onPress={isEditing ? updateHardwareId : toggleEdit}
             color="#007ACC" 
           />
         </View>
