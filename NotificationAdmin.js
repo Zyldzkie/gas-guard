@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { collection, getDocs, orderBy, query, onSnapshot } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore, auth } from './firebase.config'; // Import firestore from config
@@ -74,35 +74,48 @@ const NotificationAdminScreen = () => {
 
   const downloadExcel = async () => {
     try {
-      const q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc')); // Fetch sorted notifications
+      // Fetch notifications
+      const q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc'));
       const querySnapshot = await getDocs(q);
-      const notificationsList = [];
-
-      querySnapshot.forEach((doc) => {
-        const notificationData = doc.data();
-        notificationsList.push({
-          id: doc.id,
-          userName: notificationData.userName,
-          user: notificationData.userEmail,
-          level: notificationData.level,
-          ppm: notificationData.ppm,
-          datetime: notificationData.datetime,
-          color: notificationData.color,
-          mobileNumber: notificationData.mobileNumber,
-        });
+      
+      // Format data for Excel
+      const notificationsList = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          'User Name': data.userName,
+          'Email': data.userEmail,
+          'Mobile Number': data.mobileNumber,
+          'Level': data.level,
+          'PPM': data.ppm,
+          'Date & Time': data.datetime,
+        };
       });
 
-      const worksheet = XLSX.utils.json_to_sheet(notificationsList);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Notifications');
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(notificationsList);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Notifications");
 
-      const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
-      const fileUri = FileSystem.documentDirectory + 'notifications.xlsx';
+      // Generate Excel file
+      const wbout = XLSX.write(wb, { type: 'base64', bookType: "xlsx" });
+      
+      // Create local file
+      const fileName = `notifications_${new Date().getTime()}.xlsx`;
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, wbout, {
+        encoding: FileSystem.EncodingType.Base64
+      });
 
-      await FileSystem.writeAsStringAsync(fileUri, excelBuffer, { encoding: FileSystem.EncodingType.Base64 });
-      await Sharing.shareAsync(fileUri);
-    } catch (err) {
-      console.error('Error downloading Excel file: ', err);
+      // Share the file
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        dialogTitle: 'Download Notifications Data'
+      });
+
+    } catch (error) {
+      console.error('Error downloading Excel:', error);
+      Alert.alert('Error', 'Failed to download notifications data');
     }
   };
 
