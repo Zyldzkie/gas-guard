@@ -105,9 +105,12 @@ void loop() {
    
   }
 
-  if (sensorValue > dangerThresh)
+  if (sensorValue >= dangerThresh)
   {
     digitalWrite(redLedPin, HIGH);
     digitalWrite(buzzerPin, HIGH);
+    delay(60000);
+    digitalWrite(redLedPin, LOW);
+    digitalWrite(buzzerPin, LOW);
   }
 }
