@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore } from './firebase.config'; // Import firestore from config
 import useNotifTest from './testNotif';
+import * as XLSX from 'xlsx';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import { signOut } from 'firebase/auth'; // Import signOut from auth
 
 const NotificationCard = ({ user, userName, level, ppm, datetime, color }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -60,6 +64,47 @@ const NotificationAdminScreen = () => {
     fetchNotifications(); // Call the function when component mounts
   }, []);
 
+  const downloadExcel = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(firestore, 'notifications'));
+      const notificationsList = [];
+
+      querySnapshot.forEach((doc) => {
+        const notificationData = doc.data();
+        notificationsList.push({
+          id: doc.id,
+          userName: notificationData.userName,
+          user: notificationData.userEmail,
+          level: notificationData.level,
+          ppm: notificationData.ppm,
+          datetime: notificationData.datetime,
+          color: notificationData.color,
+        });
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(notificationsList);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Notifications');
+
+      const excelBuffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+      const fileUri = FileSystem.documentDirectory + 'notifications.xlsx';
+
+      await FileSystem.writeAsStringAsync(fileUri, excelBuffer, { encoding: FileSystem.EncodingType.Base64 });
+      await Sharing.shareAsync(fileUri);
+    } catch (err) {
+      console.error('Error downloading Excel file: ', err);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Error signing out: ', error);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -78,6 +123,8 @@ const NotificationAdminScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Button title="Download Excel" onPress={downloadExcel} />
+      <Button title="Sign Out" onPress={handleSignOut} style={styles.signOutButton} />
       {/* Logo */}
       <Image source={require('./assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>Admin Notifications</Text>
@@ -98,9 +145,6 @@ const NotificationAdminScreen = () => {
           />
         )}
       />
-      <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.signUpContainer}>
-        <Text style={styles.signUpLink}>Go back to Sign Up</Text>
-    </TouchableOpacity>
     </View>
   );
 };
@@ -193,6 +237,11 @@ const styles = StyleSheet.create({
     color: '#ff0000',      // Use a color that fits the design
     fontWeight: 'bold',    // Make the text bold
     fontSize: 16,          // Adjust font size for better readability
+  },
+  signOutButton: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
   },
 });
 
