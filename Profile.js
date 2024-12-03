@@ -55,10 +55,44 @@ const Profile = () => {
     }
   };
 
+  // Validate fields
+  const validateFields = () => {
+    if (!name.trim()) {
+      Alert.alert('Error', 'Please enter your name.');
+      return false;
+    }
+
+    // Validate name: Only letters and spaces
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(name)) {
+      Alert.alert('Error', 'Name can only contain letters and spaces.');
+      return false;
+    }
+
+    if (!mobileNumber.trim()) {
+      Alert.alert('Error', 'Please enter your mobile number.');
+      return false;
+    }
+
+    // Validate mobile number: Exactly 11 digits
+    const mobileRegex = /^[0-9]{11}$/; // Only 11 digits
+    if (!mobileRegex.test(mobileNumber)) {
+      Alert.alert('Error', 'Please enter a valid 11-digit mobile number.');
+      return false;
+    }
+
+    return true;
+  };
+
   // Handle saving the updated profile to Firestore
   const handleSave = async () => {
     if (!auth.currentUser) {
       Alert.alert('Error', 'No user is logged in.');
+      return;
+    }
+
+    // Validate before saving
+    if (!validateFields()) {
       return;
     }
 
