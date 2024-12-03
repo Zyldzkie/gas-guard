@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
+import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { collection, getDocs, orderBy, query, onSnapshot } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore, auth } from './firebase.config'; // Import firestore from config
@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { signOut } from 'firebase/auth'; // Import signOut from auth
+import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons for icons
 
 const NotificationCard = ({ user, userName, level, ppm, datetime, color, mobileNumber }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -132,8 +133,16 @@ const NotificationAdminScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Button title="Download Excel" onPress={downloadExcel} />
-      <Button title="Sign Out" onPress={handleSignOut} style={styles.signOutButton} />
+      {/* Buttons with Icons */}
+      <TouchableOpacity style={styles.downloadButton} onPress={downloadExcel}>
+        <Ionicons name="download-outline" size={24} color="#fff" />
+        
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        <Ionicons name="log-out-outline" size={24} color="#fff" />
+      </TouchableOpacity>
+      
       {/* Logo */}
       <Image source={require('./assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>Admin Notifications</Text>
@@ -238,20 +247,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginTop: -5,
   },
-  signUpContainer: {
-    alignItems: 'center', // Center the link horizontally
-    marginVertical: 20,   // Add some spacing from other elements
-    marginBottom:60,
-  },
-  signUpLink: {
-    color: '#ff0000',      // Use a color that fits the design
-    fontWeight: 'bold',    // Make the text bold
-    fontSize: 16,          // Adjust font size for better readability
-  },
   signOutButton: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    top: 20,
+    right: 20,
+    backgroundColor: '#007ACC',
+    padding: 10,
+    borderRadius: 50,
+    zIndex: 1,
+    marginTop:40,
+  },
+  downloadButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    backgroundColor: '#007ACC',
+    padding: 10,
+    borderRadius: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1,
+    marginTop:40,
+  },
+  buttonText: {
+    color: '#fff',
+    marginLeft: 5,
+    fontWeight: 'bold',
   },
   mobileNumber: {
     fontSize: 14,
