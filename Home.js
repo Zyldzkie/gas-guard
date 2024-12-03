@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, Image, Alert, TouchableOpacity } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Notification from './Notification'; // Import Notification screen
-import Profile from './Profile'; // Import Profile screen
+import Notification from './Notification';
+import Profile from './Profile';
 import { ref, onValue } from 'firebase/database';
-import { db } from './firebase.config'; // Make sure you have this configuration file
+import { db } from './firebase.config';
 import { auth, firestore } from './firebase.config';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { Alert } from 'react-native'; // Import Alert for error messages
+import { signOut } from 'firebase/auth';
+import useNotifTest from './testNotif';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,8 +17,10 @@ const HomeScreen = () => {
   const [gasLevel, setGasLevel] = useState(0);
   const [levelStatus, setLevelStatus] = useState('');
   const [hardwareId, setHardwareId] = useState('');
-  const [connectionStatus, setConnectionStatus] = useState('Offline'); // Default to offline
+  const [connectionStatus, setConnectionStatus] = useState('Offline');
   const [isEditing, setIsEditing] = useState(false);
+
+  useNotifTest();
 
   const classifyGasLevel = (level) => {
     if (level <= 100) {
@@ -25,7 +28,7 @@ const HomeScreen = () => {
     } else if (level <= 300) {
       return 'Warning';
     } else {
-      return 'Caution';
+      return 'Danger';
     }
   };
 
@@ -46,7 +49,6 @@ const HomeScreen = () => {
 
           const gasRef = ref(db, `${fetchedHardwareId}/gas_value`);
 
-          // Fetch gas level
           const unsubscribeGas = onValue(gasRef, (snapshot) => {
             const value = snapshot.val();
             if (value !== null) {
@@ -54,8 +56,7 @@ const HomeScreen = () => {
             }
           });
 
-          // Fetch connection status
-          const statusRef = ref(db, `${fetchedHardwareId}/status`); // Define statusRef
+          const statusRef = ref(db, `${fetchedHardwareId}/status`);
           const unsubscribeStatus = onValue(statusRef, (snapshot) => {
             const status = snapshot.val();
             setConnectionStatus(status === true ? 'Online' : 'Offline');
@@ -87,17 +88,14 @@ const HomeScreen = () => {
 
   const updateHardwareId = async () => {
     try {
-      // Update Firestore
       const userRef = doc(firestore, 'users', auth.currentUser.email);
       await updateDoc(userRef, {
-        hardwareId: hardwareId
+        hardwareId: hardwareId,
       });
 
-      // Set up new realtime database listeners with updated hardwareId
       const gasRef = ref(db, `${hardwareId}/gas_value`);
-      const statusRef = ref(db, `${hardwareId}/status`); // Define statusRef
+      const statusRef = ref(db, `${hardwareId}/status`);
 
-      // Update gas level listener
       onValue(gasRef, (snapshot) => {
         const value = snapshot.val();
         if (value !== null) {
@@ -105,7 +103,6 @@ const HomeScreen = () => {
         }
       });
 
-      // Update connection status listener
       onValue(statusRef, (snapshot) => {
         const status = snapshot.val();
         setConnectionStatus(status === true ? 'Online' : 'Offline');
@@ -119,8 +116,23 @@ const HomeScreen = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate('Login');
+      Alert.alert('Signed Out', 'You have been signed out.');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      Alert.alert('Error', 'Failed to sign out.');
+    }
+  };
+
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        <MaterialIcons name="logout" size={24} color="#fff" />
+      </TouchableOpacity>
+
       <Image source={require('./assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>Current Gas Level:</Text>
       <View style={styles.divider} />
@@ -132,7 +144,10 @@ const HomeScreen = () => {
         Level: <Text style={[styles.status, styles[levelStatus.toLowerCase()]]}>{levelStatus}</Text>
       </Text>
       <Text style={styles.connectionStatus}>
-        Connection Status: <Text style={{ fontWeight: 'bold', color: connectionStatus === 'Online' ? 'green' : 'red' }}>{connectionStatus}</Text>
+        Connection Status:{' '}
+        <Text style={{ fontWeight: 'bold', color: connectionStatus === 'Online' ? 'green' : 'red' }}>
+          {connectionStatus}
+        </Text>
       </Text>
       <View style={styles.hardwareContainer}>
         <TextInput
@@ -142,11 +157,7 @@ const HomeScreen = () => {
           onChangeText={(text) => setHardwareId(text)}
         />
         <View style={styles.buttonWrapper}>
-          <Button
-            title={isEditing ? 'Save' : 'Edit'}
-            onPress={isEditing ? updateHardwareId : toggleEdit}
-            color="#007ACC" 
-          />
+          <Button title={isEditing ? 'Save' : 'Edit'} onPress={isEditing ? updateHardwareId : toggleEdit} color="#007ACC" />
         </View>
       </View>
     </View>
@@ -172,14 +183,14 @@ export default function Home() {
       />
       <Tab.Screen
         name="Notification"
-        component={Notification} // Use the imported Notification component
+        component={Notification}
         options={{
           tabBarIcon: ({ color, size }) => <MaterialIcons name="notifications" size={size} color={color} />,
         }}
       />
       <Tab.Screen
         name="Profile"
-        component={Profile} // Use the imported Profile component
+        component={Profile}
         options={{
           tabBarIcon: ({ color, size }) => <FontAwesome name="user" size={size} color={color} />,
         }}
@@ -194,6 +205,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
     padding: 20,
+  },
+  signOutButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: '#007ACC',
+    borderRadius: 30,
+    padding: 10,
+    zIndex: 10,
   },
   logo: {
     width: 120,
@@ -250,7 +270,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
-    paddingHorizontal:20,
+    paddingHorizontal: 20,
   },
   hardwareInput: {
     borderWidth: 1,
@@ -262,9 +282,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   buttonWrapper: {
-    borderRadius: 8, // Rounded corners
-    overflow: 'hidden', // Ensures the button stays inside the wrapper
-    paddingHorizontal: 10, // Adjust horizontal padding
+    borderRadius: 8,
+    overflow: 'hidden',
+    paddingHorizontal: 10,
   },
   tabBar: {
     backgroundColor: '#007ACC',
