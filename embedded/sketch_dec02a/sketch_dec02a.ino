@@ -6,6 +6,7 @@
 // CUSTOMIZEABLE --- START | CUSTOMIZEABLE --- START | CUSTOMIZEABLE --- START
 
 
+
 // CUSTOMIZEABLE --- END | CUSTOMIZEABLE --- END | CUSTOMIZEABLE --- END
 
 FirebaseData fbdo;
@@ -16,6 +17,7 @@ bool signupOK = false;
 bool ledstatus = false;
 bool buzzerStatus = false;
 unsigned long sendDataPrevMillis = 0;
+int sensorValue = 0;
 
 
 void setup() {
@@ -59,28 +61,35 @@ void setup() {
 }
 
 void loop() {
-  int sensorValue = analogRead(gasSensorPin);
-
-  if (sensorValue > threshold)
-  {
-    digitalWrite(redLedPin, HIGH);
-    digitalWrite(buzzerPin, HIGH);
-    delay(60000);
-    digitalWrite(buzzerPin, LOW);
-    digitalWrite(redLedPin, LOW);
-  }
-
 
   if(Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > checkIntervalMilli || sendDataPrevMillis == 0)){
     sendDataPrevMillis = millis();
-    digitalWrite(yellowLedPin, HIGH);
+
+    sensorValue = analogRead(gasSensorPin);
     
     if (Firebase.RTDB.setInt(&fbdo, "/" + hardwareId + "/gas_value", sensorValue)) {
-
+      
       Serial.print("Gas value has been updated: ");
       Serial.println(sensorValue);
 
       Firebase.RTDB.setBool(&fbdo, "/" + hardwareId + "/status", true);
+
+      digitalWrite(yellowLedPin, HIGH);
+      ctr++;
+      Serial.println("Sending data: " + String(ctr));
+
+      // Set warning and danger thresholds to the Firebase Realtime Database
+      if (Firebase.RTDB.setInt(&fbdo, "/" + hardwareId + "/warningThresh", warningThresh)) {
+        Serial.println("Warning threshold updated to: " + String(warningThresh));
+      } else {
+        Serial.println("Failed to update warning threshold. Error: " + fbdo.errorReason());
+      }
+
+      if (Firebase.RTDB.setInt(&fbdo, "/" + hardwareId + "/dangerThresh", dangerThresh)) {
+        Serial.println("Danger threshold updated to: " + String(dangerThresh));
+      } else {
+        Serial.println("Failed to update danger threshold. Error: " + fbdo.errorReason());
+      }
 
     } else {
       Serial.print("Failed to update gas value. Error: ");
@@ -88,9 +97,17 @@ void loop() {
 
       Firebase.RTDB.setBool(&fbdo, "/" + hardwareId + "/status", false);
     }  
+    
   }
   else
   {
     digitalWrite(yellowLedPin, LOW);
+   
+  }
+
+  if (sensorValue > dangerThresh)
+  {
+    digitalWrite(redLedPin, HIGH);
+    digitalWrite(buzzerPin, HIGH);
   }
 }

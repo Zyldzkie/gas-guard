@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, get } from 'firebase/database';
 import { db } from './firebase.config';
 import { auth, firestore } from './firebase.config';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
@@ -25,11 +25,15 @@ const useNotifTest = () => {
           unsubscribeGas = onValue(gasRef, async (snapshot) => {
             const value = snapshot.val();
             if (value !== null) {
-              // Skip database insertion for gas levels <= 100
-              if (value <= 100) {
-                console.log('Gas level is safe; no notification added.');
-                return;
-              }
+      
+              const warningThreshRef = ref(db, `${fetchedHardwareId}/warningThresh`);
+              const dangerThreshRef = ref(db, `${fetchedHardwareId}/dangerThresh`);
+    
+              const warningThreshSnapshot = await get(warningThreshRef);
+              const dangerThreshSnapshot = await get(dangerThreshRef);
+              
+              const warningThreshold = warningThreshSnapshot.val() || 300; 
+              const dangerThreshold = dangerThreshSnapshot.val() || 400; 
 
               const userEmail = auth.currentUser.email;
               const datetime = new Date().toLocaleString('en-US', {
@@ -40,23 +44,34 @@ const useNotifTest = () => {
                 minute: '2-digit',
                 second: '2-digit',
                 hour12: true,
-              }); // Example: "Dec 02, 2024, 10:15:30 PM"
+              });
 
               let notification = {
                 color: '',
-                datetime: `${datetime}`, // Ensures datetime is a string
+                datetime: `${datetime}`,
                 level: '',
                 ppm: value,
                 userEmail,
               };
 
-              if (value <= 300) {
-                notification.color = '#FFC000'; // Orange for warning levels
+              
+              if (value >= warningThreshold) {
+                notification.color = '#FFC000'; 
                 notification.level = 'Warning';
-              } else {
-                notification.color = '#FF0000'; // Red for danger levels
+                console.log('Warning threshold reached');
+              } else if (value >= dangerThreshold) {
+                notification.color = '#FF0000'; 
                 notification.level = 'Danger';
+                console.log('Danger threshold reached');
               }
+              else {
+                console.log('Gas level is safe; no notification added.');
+                return;
+              }
+
+              
+
+      
 
               try {
                 const notificationsCollection = collection(firestore, 'notifications');
