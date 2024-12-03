@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
-import { firestore } from './firebase.config'; // Import firestore from config
+import { firestore, auth } from './firebase.config'; // Import firestore from config
 import useNotifTest from './testNotif';
 import * as XLSX from 'xlsx';
 import * as FileSystem from 'expo-file-system';
