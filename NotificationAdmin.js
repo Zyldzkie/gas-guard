@@ -9,13 +9,15 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { signOut } from 'firebase/auth'; // Import signOut from auth
 
-const NotificationCard = ({ user, userName, level, ppm, datetime, color }) => (
+const NotificationCard = ({ user, userName, level, ppm, datetime, color, mobileNumber }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
     <View style={styles.textContainer}>
       <Text style={styles.userName}>{userName}</Text>
       <Text style={styles.user}>{user}</Text>  
+      <Text style={styles.mobileNumber}>{mobileNumber}</Text>
       <Text style={styles.level}>{level}</Text>
       <Text style={styles.datetime}>{datetime}</Text>
+     
     </View>
     <View style={styles.ppmContainer}>
       <Text style={styles.ppm}>{ppm}</Text>
@@ -53,6 +55,7 @@ const NotificationAdminScreen = () => {
           ppm: notificationData.ppm,
           datetime: notificationData.datetime,
           color: notificationData.color,
+          mobileNumber: notificationData.mobileNumber,
         });
       });
       
@@ -84,6 +87,7 @@ const NotificationAdminScreen = () => {
           ppm: notificationData.ppm,
           datetime: notificationData.datetime,
           color: notificationData.color,
+          mobileNumber: notificationData.mobileNumber,
         });
       });
 
@@ -147,6 +151,7 @@ const NotificationAdminScreen = () => {
             ppm={item.ppm}
             datetime={item.datetime}
             color={item.color}
+            mobileNumber={item.mobileNumber}
           />
         )}
       />
@@ -201,7 +206,6 @@ const styles = StyleSheet.create({
   user: {
     fontSize: 13,
     color: '#fff',
-    marginBottom: 5, 
   },
   userName: {
     fontSize: 16,
@@ -219,6 +223,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     marginTop: 5,
+    marginBottom: 5,
   },
   ppmContainer: {
     alignItems: 'flex-end',
@@ -247,6 +252,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
+  },
+  mobileNumber: {
+    fontSize: 14,
+    color: '#fff',
+    marginTop: 5,
   },
 });
 

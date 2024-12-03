@@ -52,19 +52,19 @@ const useNotifTest = () => {
                 level: '',
                 ppm: value,
                 userEmail,
+                mobileNumber: userDoc.data().mobileNumber,
               };
 
               
-              if (value >= warningThreshold) {
-                notification.color = '#FFC000'; 
-                notification.level = 'Warning';
-                console.log('Warning threshold reached');
-              } else if (value >= dangerThreshold) {
+              if (value >= dangerThreshold) {
                 notification.color = '#FF0000'; 
                 notification.level = 'Danger';
                 console.log('Danger threshold reached');
-              }
-              else {
+              } else if (value >= warningThreshold) {
+                notification.color = '#FFC000'; 
+                notification.level = 'Warning';
+                console.log('Warning threshold reached');
+              } else {
                 console.log('Gas level is safe; no notification added.');
                 return;
               }
