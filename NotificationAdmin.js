@@ -21,11 +21,12 @@ const NotificationCard = ({ user, userName, level, ppm, datetime, color }) => (
 );
 
 const NotificationAdminScreen = () => {
-  useNotifTest();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigation = useNavigation();
+
+  useNotifTest();
 
   // Fetch notifications from Firestore
   const fetchNotifications = async () => {
