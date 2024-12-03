@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore, auth } from './firebase.config'; // Import firestore from config
 import useNotifTest from './testNotif';
@@ -32,10 +32,11 @@ const NotificationAdminScreen = () => {
 
   useNotifTest();
 
-  // Fetch notifications from Firestore
+  // Fetch notifications from Firestore and sort them by datetime
   const fetchNotifications = async () => {
     try {
-      const querySnapshot = await getDocs(collection(firestore, 'notifications')); // Fetch notifications
+      const q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc')); // Fetch notifications sorted by datetime
+      const querySnapshot = await getDocs(q); // Fetch sorted notifications
       const notificationsList = [];
 
       querySnapshot.forEach((doc) => {
@@ -51,7 +52,7 @@ const NotificationAdminScreen = () => {
         });
       });
 
-      setNotifications(notificationsList); // Update state with fetched notifications
+      setNotifications(notificationsList); // Update state with sorted notifications
     } catch (err) {
       setError('Failed to fetch notifications');
       console.error('Error fetching notifications: ', err);
@@ -66,7 +67,8 @@ const NotificationAdminScreen = () => {
 
   const downloadExcel = async () => {
     try {
-      const querySnapshot = await getDocs(collection(firestore, 'notifications'));
+      const q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc')); // Fetch sorted notifications
+      const querySnapshot = await getDocs(q);
       const notificationsList = [];
 
       querySnapshot.forEach((doc) => {

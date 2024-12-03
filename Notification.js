@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator } from 'react-native';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { firestore } from './firebase.config'; // Import firestore from config
 import { getAuth } from 'firebase/auth'; // For getting current user email
 import useNotifTest from './testNotif';
@@ -35,10 +35,11 @@ const Notification = () => {
         return;
       }
 
-      // Query Firestore to get documents where userEmail matches current user's email
+      // Updated query to include orderBy
       const notificationsQuery = query(
         collection(firestore, 'notifications'),
-        where('userEmail', '==', currentUserEmail)
+        where('userEmail', '==', currentUserEmail),
+        orderBy('datetime', 'desc') // Sort by datetime in descending order
       );
 
       const querySnapshot = await getDocs(notificationsQuery); // Execute the query
