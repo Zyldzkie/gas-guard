@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Button } from 'react-native';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, onSnapshot } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore, auth } from './firebase.config'; // Import firestore from config
 import useNotifTest from './testNotif';
@@ -32,17 +32,21 @@ const NotificationAdminScreen = () => {
 
   useNotifTest();
 
-  // Fetch notifications from Firestore and sort them by datetime
-  const fetchNotifications = async () => {
-    try {
-      const q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc')); // Fetch notifications sorted by datetime
-      const querySnapshot = await getDocs(q); // Fetch sorted notifications
-      const notificationsList = [];
+  useEffect(() => {
+    setLoading(true);
+    
+    // Set up real-time listener for notifications
+    const q = query(
+      collection(firestore, 'notifications'), 
+      orderBy('datetime', 'desc')
+    );
 
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const notificationsList = [];
       querySnapshot.forEach((doc) => {
         const notificationData = doc.data();
         notificationsList.push({
-          id: doc.id, // Document ID as key
+          id: doc.id,
           userName: notificationData.userName,
           user: notificationData.userEmail,
           level: notificationData.level,
@@ -51,18 +55,17 @@ const NotificationAdminScreen = () => {
           color: notificationData.color,
         });
       });
-
-      setNotifications(notificationsList); // Update state with sorted notifications
-    } catch (err) {
+      
+      setNotifications(notificationsList);
+      setLoading(false);
+    }, (error) => {
       setError('Failed to fetch notifications');
-      console.error('Error fetching notifications: ', err);
-    } finally {
-      setLoading(false); // Turn off loading spinner
-    }
-  };
+      console.error('Error fetching notifications: ', error);
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchNotifications(); // Call the function when component mounts
+    // Clean up listener on component unmount
+    return () => unsubscribe();
   }, []);
 
   const downloadExcel = async () => {

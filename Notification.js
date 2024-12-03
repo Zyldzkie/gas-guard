@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator } from 'react-native';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 import { firestore } from './firebase.config'; // Import firestore from config
 import { getAuth } from 'firebase/auth'; // For getting current user email
 import useNotifTest from './testNotif';
@@ -25,48 +25,45 @@ const Notification = () => {
 
   useNotifTest();
 
-  const fetchNotifications = async () => {
-    try {
-      const auth = getAuth(); // Initialize Firebase auth
-      const currentUserEmail = auth.currentUser?.email; // Get current user's email
+  useEffect(() => {
+    const auth = getAuth();
+    const currentUserEmail = auth.currentUser?.email;
 
-      if (!currentUserEmail) {
-        setError('User not logged in');
-        return;
-      }
+    if (!currentUserEmail) {
+      setError('User not logged in');
+      setLoading(false);
+      return;
+    }
 
-      // Updated query to include orderBy
-      const notificationsQuery = query(
-        collection(firestore, 'notifications'),
-        where('userEmail', '==', currentUserEmail),
-        orderBy('datetime', 'desc') // Sort by datetime in descending order
-      );
+    // Set up a real-time listener for notifications
+    const notificationsQuery = query(
+      collection(firestore, 'notifications'),
+      where('userEmail', '==', currentUserEmail),
+      orderBy('datetime', 'desc')
+    );
 
-      const querySnapshot = await getDocs(notificationsQuery); // Execute the query
+    const unsubscribe = onSnapshot(notificationsQuery, (querySnapshot) => {
       const notificationsList = [];
-
       querySnapshot.forEach((doc) => {
         const notificationData = doc.data();
         notificationsList.push({
-          id: doc.id, // Document ID as key
+          id: doc.id,
           level: notificationData.level,
           ppm: notificationData.ppm,
           datetime: notificationData.datetime,
           color: notificationData.color,
         });
       });
-
-      setNotifications(notificationsList); // Update state with fetched notifications
-    } catch (err) {
+      setNotifications(notificationsList);
+      setLoading(false);
+    }, (error) => {
       setError('Failed to fetch notifications');
-      console.error('Error fetching notifications: ', err);
-    } finally {
-      setLoading(false); // Turn off loading spinner
-    }
-  };
+      console.error('Error fetching notifications: ', error);
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchNotifications(); // Fetch notifications on component mount
+    // Clean up the listener on component unmount
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
