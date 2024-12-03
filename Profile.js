@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Alert } fro
 import { auth, firestore } from './firebase.config'; // Import Firebase configuration
 import { doc, getDoc, setDoc } from 'firebase/firestore'; // Modular Firestore methods
 import * as ImagePicker from 'expo-image-picker'; // For picking images
+import NotifTest from './testNotif';
 
 const Profile = () => {
   const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150'); // Default image
@@ -82,6 +83,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchUserData(); // Fetch user data when the component loads
+    NotifTest();
   }, []);
 
   return (

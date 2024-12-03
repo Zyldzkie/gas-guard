@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOp
 import { collection, getDocs } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore } from './firebase.config'; // Import firestore from config
+import NotifTest from './testNotif';
 
 const NotificationCard = ({ user, userName, level, ppm, datetime, color }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -55,6 +56,7 @@ const NotificationAdminScreen = () => {
 
   useEffect(() => {
     fetchNotifications(); // Call the function when component mounts
+    NotifTest
   }, []);
 
   if (loading) {
