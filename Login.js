@@ -120,7 +120,7 @@ export default function LoginScreen() {
             onChangeText={(text) => setPassword(text)}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} color="#ff0000" />
+            <Icon name={showPassword ? 'eye' : 'eye-off'} size={24} color="#ff0000" />
           </TouchableOpacity>
         </View>
 
