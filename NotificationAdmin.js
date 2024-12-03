@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOp
 import { collection, getDocs } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore } from './firebase.config'; // Import firestore from config
-import NotifTest from './testNotif';
+import useNotifTest from './testNotif';
 
 const NotificationCard = ({ user, userName, level, ppm, datetime, color }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -21,6 +21,7 @@ const NotificationCard = ({ user, userName, level, ppm, datetime, color }) => (
 );
 
 const NotificationAdminScreen = () => {
+  useNotifTest();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -56,7 +57,6 @@ const NotificationAdminScreen = () => {
 
   useEffect(() => {
     fetchNotifications(); // Call the function when component mounts
-    NotifTest();
   }, []);
 
   if (loading) {
