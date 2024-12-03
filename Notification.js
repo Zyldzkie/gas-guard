@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator } from 'reac
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { firestore } from './firebase.config'; // Import firestore from config
 import { getAuth } from 'firebase/auth'; // For getting current user email
+import NotifTest from './testNotif';
 
 const NotificationCard = ({ level, ppm, datetime, color }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -21,6 +22,8 @@ const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  NotifTest();
 
   const fetchNotifications = async () => {
     try {
