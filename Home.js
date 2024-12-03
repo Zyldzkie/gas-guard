@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, Image, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, Image, Alert, TouchableOpacity, KeyboardAvoidingView, ScrollView, Platform, Keyboard } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
 import Notification from './Notification';
 import Profile from './Profile';
 import { ref, onValue } from 'firebase/database';
@@ -20,6 +21,7 @@ const HomeScreen = () => {
   const [hardwareId, setHardwareId] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('Offline');
   const [isEditing, setIsEditing] = useState(false);
+  const navigation = useNavigation();
 
   useNotifTest();
   const navigation = useNavigation();
@@ -130,39 +132,49 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <MaterialIcons name="logout" size={24} color="#fff" />
-      </TouchableOpacity>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <MaterialIcons name="logout" size={24} color="#fff" />
+        </TouchableOpacity>
 
-      <Image source={require('./assets/logo.png')} style={styles.logo} />
-      <Text style={styles.title}>Current Gas Level:</Text>
-      <View style={styles.divider} />
-      <View style={styles.gasLevelBox}>
-        <Text style={styles.gasLevel}>{gasLevel}</Text>
-        <Text style={styles.unit}>ppm</Text>
-      </View>
-      <Text style={styles.level}>
-        Level: <Text style={[styles.status, styles[levelStatus.toLowerCase()]]}>{levelStatus}</Text>
-      </Text>
-      <Text style={styles.connectionStatus}>
-        Connection Status:{' '}
-        <Text style={{ fontWeight: 'bold', color: connectionStatus === 'Online' ? 'green' : 'red' }}>
-          {connectionStatus}
-        </Text>
-      </Text>
-      <View style={styles.hardwareContainer}>
-        <TextInput
-          style={styles.hardwareInput}
-          value={hardwareId}
-          editable={isEditing}
-          onChangeText={(text) => setHardwareId(text)}
-        />
-        <View style={styles.buttonWrapper}>
-          <Button title={isEditing ? 'Save' : 'Edit'} onPress={isEditing ? updateHardwareId : toggleEdit} color="#007ACC" />
+        <Image source={require('./assets/logo.png')} style={styles.logo} />
+        <Text style={styles.title}>Current Gas Level:</Text>
+        <View style={styles.divider} />
+        <View style={styles.gasLevelBox}>
+          <Text style={styles.gasLevel}>{gasLevel}</Text>
+          <Text style={styles.unit}>ppm</Text>
         </View>
-      </View>
-    </View>
+        <Text style={styles.level}>
+          Level: <Text style={[styles.status, styles[levelStatus.toLowerCase()]]}>{levelStatus}</Text>
+        </Text>
+        <Text style={styles.connectionStatus}>
+          Connection Status:{' '}
+          <Text style={{ fontWeight: 'bold', color: connectionStatus === 'Online' ? 'green' : 'red' }}>
+            {connectionStatus}
+          </Text>
+        </Text>
+        <View style={styles.hardwareContainer}>
+          <TextInput
+            style={styles.hardwareInput}
+            value={hardwareId}
+            editable={isEditing}
+            onChangeText={(text) => setHardwareId(text)}
+          />
+          <View style={styles.buttonWrapper}>
+            <Button title={isEditing ? 'Save' : 'Edit'} onPress={isEditing ? updateHardwareId : toggleEdit} color="#007ACC" />
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -199,11 +211,11 @@ export default function Home() {
       />
     </Tab.Navigator>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  scrollViewContainer: {
+    flexGrow: 1,
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
     padding: 20,
@@ -259,39 +271,43 @@ const styles = StyleSheet.create({
   },
   level: {
     fontSize: 18,
+    marginTop: 10,
+  },
+  status: {
     fontWeight: 'bold',
-    color: '#000',
+  },
+  normal: {
+    color: 'green',
+  },
+  warning: {
+    color: 'orange',
+  },
+  danger: {
+    color: 'red',
   },
   connectionStatus: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 10,
-    marginTop: 100,
+    fontSize: 16,
+    marginTop: 20,
   },
   hardwareContainer: {
-    flexDirection: 'row',
+    width: '100%',
+    marginTop: 20,
     alignItems: 'center',
-    marginTop: 10,
-    paddingHorizontal: 20,
   },
   hardwareInput: {
+    width: '80%',
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ddd',
-    padding: 10,
-    marginRight: 10,
-    flex: 1,
     borderRadius: 5,
-    backgroundColor: '#fff',
+    marginBottom: 10,
   },
   buttonWrapper: {
-    borderRadius: 8,
-    overflow: 'hidden',
-    paddingHorizontal: 10,
+    width: '80%',
   },
   tabBar: {
     backgroundColor: '#007ACC',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    height: 60,
   },
 });

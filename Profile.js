@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Image, TouchableOpacity, Alert, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { auth, firestore } from './firebase.config'; // Import Firebase configuration
 import { doc, getDoc, setDoc } from 'firebase/firestore'; // Modular Firestore methods
 import * as ImagePicker from 'expo-image-picker'; // For picking images
@@ -87,63 +87,73 @@ const Profile = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <Image source={require('./assets/logo.png')} style={styles.logo} />
-      <Text style={styles.title}>Profile</Text>
-      <View style={styles.divider} />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Image source={require('./assets/logo.png')} style={styles.logo} />
+        <Text style={styles.title}>Profile</Text>
+        <View style={styles.divider} />
 
-      {/* Profile Picture */}
-      <TouchableOpacity onPress={handleImagePick} style={styles.profilePicContainer}>
-        <Image
-          source={{
-            uri: profileImage,
-          }}
-          style={styles.profileImage}
-        />
-        <Text style={styles.editPhotoText}>Edit Photo</Text>
-      </TouchableOpacity>
+        {/* Profile Picture */}
+        <TouchableOpacity onPress={handleImagePick} style={styles.profilePicContainer}>
+          <Image
+            source={{
+              uri: profileImage,
+            }}
+            style={styles.profileImage}
+          />
+          <Text style={styles.editPhotoText}>Edit Photo</Text>
+        </TouchableOpacity>
 
-      {/* Editable Fields */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter your name"
-        />
-      </View>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Mobile Number</Text>
-        <TextInput
-          style={styles.input}
-          value={mobileNumber}
-          onChangeText={setMobileNumber}
-          placeholder="Enter your mobile number"
-          keyboardType="phone-pad"
-        />
-      </View>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          value={email}
-          editable={false} // Email field is read-only
-        />
-      </View>
+        {/* Editable Fields */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Name</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter your name"
+          />
+        </View>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Mobile Number</Text>
+          <TextInput
+            style={styles.input}
+            value={mobileNumber}
+            onChangeText={setMobileNumber}
+            placeholder="Enter your mobile number"
+            keyboardType="phone-pad"
+          />
+        </View>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            editable={false} // Email field is read-only
+          />
+        </View>
 
-      {/* Save Button */}
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Text style={styles.saveButtonText}>Save</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Save Button */}
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  scrollViewContainer: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     backgroundColor: '#f5f5f5',
   },
@@ -204,12 +214,12 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     width: '100%',
-    height: 50,
+    height: 40,
     backgroundColor: '#007ACC',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 0,
   },
   saveButtonText: {
     color: '#fff',

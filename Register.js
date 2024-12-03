@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // Import the icon library
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { auth, firestore } from './firebase.config';
-import { createUserWithEmailAndPassword, sendEmailVerification   } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
 export default function RegisterScreen() {
-  // State variables to store user inputs
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,134 +17,153 @@ export default function RegisterScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigation = useNavigation();
 
-    // Function to handle registration
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.toLowerCase());
+  };
+
+  const validateMobileNumber = (mobile) => {
+    const mobileRegex = /^[0-9]{11}$/; // Ensures exactly 11 digits
+    return mobileRegex.test(mobile);
+  };
+
   const handleRegister = async () => {
+    const trimmedEmail = email.toLowerCase().trim();
+    const trimmedMobile = mobileNumber.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
+
     if (!firstName || !lastName || !email || !mobileNumber || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+
+    if (!validateEmail(trimmedEmail)) {
+      Alert.alert('Error', 'Please enter a valid email address.');
       return;
     }
-    
+
+    if (!validateMobileNumber(trimmedMobile)) {
+      Alert.alert('Error', 'Please enter a valid mobile number (11 digits).');
+      return;
+    }
+
+    if (trimmedPassword.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters long.');
+      return;
+    }
+
+    if (trimmedPassword !== trimmedConfirmPassword) {
+      Alert.alert('Error', 'Passwords do not match.');
+      return;
+    }
+
     try {
-      // Register user with Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
       const user = userCredential.user;
 
       await sendEmailVerification(user);
 
+      const userDocRef = doc(firestore, 'users', trimmedEmail);
 
-
-      // Create a reference to the users collection and the specific user document
-      const userDocRef = doc(firestore, 'users', email);
-      
-      // Save additional data (username) to Firestore
       await setDoc(userDocRef, {
         firstname: firstName,
         lastname: lastName,
-        email: email,
-        mobileNumber: mobileNumber,
-        createdAt: new Date().toISOString(), // Convert Date to string for Firestore
+        email: trimmedEmail,
+        mobileNumber: trimmedMobile,
+        createdAt: new Date().toISOString(),
         hardwareId: null,
         isAdmin: false,
       });
 
-      Alert.alert('Success', 'Registration successful');
+      Alert.alert('Success', 'Registration successful. Please verify your email before logging in.');
       navigation.navigate('Login');
-
     } catch (error) {
       console.error(error);
       Alert.alert('Error', error.message);
     }
   };
 
-
-
-  
-
   return (
-    <View style={styles.container}>
-      {/* Logo */}
-      <Image source={require('./assets/logo.png')} style={styles.logo} />
-
-      {/* Title */}
-      <Text style={styles.title}>Register</Text>
-
-      {/* Input Fields */}
-      <View style={styles.row}>
-        <TextInput
-          style={[styles.input, styles.halfInput]}
-          placeholder="First Name"
-          placeholderTextColor="#aaa"
-          value={firstName}
-          onChangeText={(text) => setFirstName(text)}
-        />
-        <TextInput
-          style={[styles.input, styles.halfInput]}
-          placeholder="Last Name"
-          placeholderTextColor="#aaa"
-          value={lastName}
-          onChangeText={(text) => setLastName(text)}
-        />
-      </View>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#aaa"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={(text) => setEmail(text)}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Mobile Number"
-        placeholderTextColor="#aaa"
-        keyboardType="phone-pad"
-        value={mobileNumber}
-        onChangeText={(text) => setMobileNumber(text)}
-      />
-
-      {/* Password Input */}
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.passwordInput}
-          placeholder="Password"
-          placeholderTextColor="#aaa"
-          secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={(text) => setPassword(text)}
-        />
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-          <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} color="#ff0000" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Confirm Password Input */}
-      <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.passwordInput}
-          placeholder="Confirm Password"
-          placeholderTextColor="#aaa"
-          secureTextEntry={!showConfirmPassword}
-          value={confirmPassword}
-          onChangeText={(text) => setConfirmPassword(text)}
-        />
-        <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-          <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} color="#ff0000" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Register Button */}
-      <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-        <Text style={styles.registerButtonText}>Register</Text>
-      </TouchableOpacity>
-
-      
-    </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.container}>
+          <Image source={require('./assets/logo.png')} style={styles.logo} />
+          <Text style={styles.title}>Register</Text>
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="First Name"
+              placeholderTextColor="#aaa"
+              value={firstName}
+              onChangeText={(text) => setFirstName(text)}
+            />
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="Last Name"
+              placeholderTextColor="#aaa"
+              value={lastName}
+              onChangeText={(text) => setLastName(text)}
+            />
+          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#aaa"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={(text) => setEmail(text)}
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Mobile Number"
+            placeholderTextColor="#aaa"
+            keyboardType="phone-pad"
+            value={mobileNumber}
+            onChangeText={(text) => setMobileNumber(text)}
+          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              placeholderTextColor="#aaa"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={(text) => setPassword(text)}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} color="#ff0000" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm Password"
+              placeholderTextColor="#aaa"
+              secureTextEntry={!showConfirmPassword}
+              value={confirmPassword}
+              onChangeText={(text) => setConfirmPassword(text)}
+            />
+            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} color="#ff0000" />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+            <Text style={styles.registerButtonText}>Register</Text>
+          </TouchableOpacity>
+          {/* Navigate to Login Page */}
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.signInLink}>
+              Already have an account? <Text style={styles.signUpLink}>Sign in</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
