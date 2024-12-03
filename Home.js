@@ -9,7 +9,6 @@ import { ref, onValue } from 'firebase/database';
 import { db } from './firebase.config';
 import { auth, firestore } from './firebase.config';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { useNavigation } from '@react-navigation/native';
 import { signOut } from 'firebase/auth';
 import useNotifTest from './testNotif';
 
@@ -24,7 +23,6 @@ const HomeScreen = () => {
   const navigation = useNavigation();
 
   useNotifTest();
-  const navigation = useNavigation();
 
   const classifyGasLevel = (level) => {
     if (level <= 100) {
