@@ -56,7 +56,7 @@ const NotificationAdminScreen = () => {
 
   useEffect(() => {
     fetchNotifications(); // Call the function when component mounts
-    NotifTest
+    NotifTest();
   }, []);
 
   if (loading) {
