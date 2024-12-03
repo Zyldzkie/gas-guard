@@ -136,7 +136,7 @@ export default function RegisterScreen() {
               onChangeText={(text) => setPassword(text)}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Icon name={showPassword ? 'eye-off' : 'eye'} size={24} color="#ff0000" />
+              <Icon name={showPassword ? 'eye' : 'eye-off'} size={24} color="#ff0000" />
             </TouchableOpacity>
           </View>
           <View style={styles.passwordContainer}>
@@ -149,7 +149,7 @@ export default function RegisterScreen() {
               onChangeText={(text) => setConfirmPassword(text)}
             />
             <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-              <Icon name={showConfirmPassword ? 'eye-off' : 'eye'} size={24} color="#ff0000" />
+              <Icon name={showConfirmPassword ? 'eye' : 'eye-off'} size={24} color="#ff0000" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
