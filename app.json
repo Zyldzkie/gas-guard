@@ -30,6 +30,11 @@
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "@react-native-firebase/crashlytics"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "afc775a5-0fd0-46cf-914a-f32322b72e43"
+      }
+    }
   }
 }
