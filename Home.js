@@ -166,6 +166,7 @@ const HomeScreen = () => {
             value={hardwareId}
             editable={isEditing}
             onChangeText={(text) => setHardwareId(text)}
+            placeholder="Enter your hardware ID"
           />
           <View style={styles.buttonWrapper}>
             <Button title={isEditing ? 'Save' : 'Edit'} onPress={isEditing ? updateHardwareId : toggleEdit} color="#007ACC" />
