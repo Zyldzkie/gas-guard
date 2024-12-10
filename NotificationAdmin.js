@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { collection, getDocs, orderBy, query, onSnapshot, where } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore, auth } from './firebase.config'; // Import firestore from config
@@ -10,6 +10,11 @@ import * as Sharing from 'expo-sharing';
 import { signOut } from 'firebase/auth'; // Import signOut from auth
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons for icons
 import { Picker } from '@react-native-picker/picker'; 
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { MaterialIcons } from '@expo/vector-icons';
+
+
+const Tab = createBottomTabNavigator();
 
 const NotificationCard = ({ user, userName, level, ppm, datetime, color, mobileNumber }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -179,6 +184,15 @@ const NotificationAdminScreen = () => {
     }
   };
 
+  const handleDataAnalytics = async () => {
+    try {
+      await signOut(auth);
+      navigation.navigate('DataAnalytics');
+    } catch (error) {
+      console.error('Error switching to Analytics Screen: ', error);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -196,37 +210,35 @@ const NotificationAdminScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
 
-      {/* Buttons with Icons */}
-      <TouchableOpacity style={styles.downloadButton} onPress={downloadExcel}>
-        <Ionicons name="download-outline" size={24} color="#fff" />
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Ionicons name="log-out-outline" size={24} color="#fff" />
-      </TouchableOpacity>
-      
-      {/* Logo */}
-      <Image source={require('./assets/logo.png')} style={styles.logo} />
-      <Text style={styles.title}>Admin Notifications</Text>
-      <View style={styles.divider} />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.container}>
+        
+        {/* Logo */}
+        <Image source={require('./assets/logo.png')} style={styles.logo} />
+        <Text style={styles.title}>Admin Notifications</Text>
+        <View style={styles.divider} />
 
-      {/* Dropdown for selecting user email */}
-      <Picker
-        selectedValue={selectedUserId}
-        onValueChange={(itemValue) => setSelectedUserId(itemValue)}
-        style={{ height: 60, width: '100%' }}
-      >
-        <Picker.Item label="All Users" value={"ALL"} />
-        {users
-          .filter(user => user.email) 
-          .map((user) => (
-            <Picker.Item key={user.id} label={user.email} value={user.id} />
-          ))}
-      </Picker>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={selectedUserId}
+            onValueChange={(itemValue) => setSelectedUserId(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="All Users" value={"ALL"} />
+            {users
+              .filter(user => user.email)
+              .map((user) => (
+                <Picker.Item key={user.id} label={user.email} value={user.id} />
+              ))}
+          </Picker>
+        </View>
 
-      {/* Notifications List */}
+    {/* Notifications List */}
+    <View style={styles.notificationList}>
       {notifications.length > 0 ? (
         <FlatList
           data={notifications} // Use filtered notifications
@@ -247,6 +259,22 @@ const NotificationAdminScreen = () => {
         <Text>No Warning or Danger levels in this account</Text>
       )}
     </View>
+      </View>
+      <View style={styles.bottomNav}>
+        <TouchableOpacity onPress={downloadExcel} style={styles.navButton}>
+          <Ionicons name="download-outline" size={24} color="#fff" />
+          <Text style={styles.navButtonText}>Download</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleDataAnalytics} style={styles.navButton}>
+          <Ionicons name="analytics-outline" size={24} color="#fff" />
+          <Text style={styles.navButtonText}>Analytics</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleSignOut} style={styles.navButton}>
+          <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <Text style={styles.navButtonText}>Sign Out</Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -260,22 +288,23 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     alignSelf: 'center',
-    marginTop: 60,
-    marginBottom: 10,
+    marginTop: 10,
+    
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 5,
   },
   divider: {
+    zIndex: 1,
     width: '60%',
-    height: 2,
+    height: 3,
     backgroundColor: '#007ACC',
     alignSelf: 'center',
     marginVertical: 10,
-    marginBottom: 20,
+    marginBottom: -40,
   },
   card: {
     flexDirection: 'row',
@@ -331,7 +360,7 @@ const styles = StyleSheet.create({
   },
   signOutButton: {
     position: 'absolute',
-    top: 20,
+    top: -10,
     right: 20,
     backgroundColor: '#007ACC',
     padding: 10,
@@ -341,8 +370,20 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     position: 'absolute',
-    top: 20,
+    top: -10,
     left: 20,
+    backgroundColor: '#007ACC',
+    padding: 10,
+    borderRadius: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1,
+    marginTop:40,
+  },
+  dataAnalyticsButton:{
+    position: 'absolute',
+    top: -10,
+    left: 165,
     backgroundColor: '#007ACC',
     padding: 10,
     borderRadius: 50,
@@ -360,6 +401,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     marginTop: 5,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#007ACC',
+    paddingVertical: 10,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    zIndex: 1,
+  },
+  navButton: {
+    alignItems: 'center',
+  },
+  navButtonText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  picker: {
+    width: '100%',
+    zIndex: 2,
+  },
+  pickerContainer: {
+    zIndex: 3,
+    
+    marginBottom: 10,
+    
+  },
+  notificationList: {
+    flex: 1, // Ensures the FlatList takes the remaining space
+    marginTop: 10, // Adds spacing between the picker and the notifications list
+    // borderWidth: 2,
+    // borderColor: '000',
   },
 });
 
