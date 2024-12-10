@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
-import { collection, getDocs, orderBy, query, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, onSnapshot, where } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore, auth } from './firebase.config'; // Import firestore from config
 import useNotifTest from './testNotif';
@@ -9,6 +9,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { signOut } from 'firebase/auth'; // Import signOut from auth
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons for icons
+import { Picker } from '@react-native-picker/picker'; 
 
 const NotificationCard = ({ user, userName, level, ppm, datetime, color, mobileNumber }) => (
   <View style={[styles.card, { backgroundColor: color }]}>
@@ -29,53 +30,101 @@ const NotificationCard = ({ user, userName, level, ppm, datetime, color, mobileN
 
 const NotificationAdminScreen = () => {
   const [notifications, setNotifications] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState(null);
   const navigation = useNavigation();
+  
 
   useNotifTest();
 
-  useEffect(() => {
-    setLoading(true);
-    
-    // Set up real-time listener for notifications
-    const q = query(
-      collection(firestore, 'notifications'), 
-      orderBy('datetime', 'desc')
-    );
+  // Define fetchUsers before useEffect
+  const fetchUsers = async () => {
+    const usersList = await getAllUsers(); 
+    setUsers(usersList); // Ensure users state is set correctly
+  };
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const notificationsList = [];
+  const getAllUsers = async () => {
+    try {
+      const usersQuery = query(collection(firestore, 'users'));
+      const querySnapshot = await getDocs(usersQuery);
+      const usersList = [];
       querySnapshot.forEach((doc) => {
-        const notificationData = doc.data();
-        notificationsList.push({
+        const userData = doc.data();
+        usersList.push({
           id: doc.id,
-          userName: notificationData.userName,
-          user: notificationData.userEmail,
-          level: notificationData.level,
-          ppm: notificationData.ppm,
-          datetime: notificationData.datetime,
-          color: notificationData.color,
-          mobileNumber: notificationData.mobileNumber,
+          email: userData.email,
+          mobileNumber: userData.mobileNumber,
+          isAdmin: userData.isAdmin,
         });
       });
-      
-      setNotifications(notificationsList);
-      setLoading(false);
-    }, (error) => {
-      setError('Failed to fetch notifications');
-      console.error('Error fetching notifications: ', error);
-      setLoading(false);
-    });
+      console.log('Users List:', usersList); // Debugging line
+      return usersList;
 
-    // Clean up listener on component unmount
-    return () => unsubscribe();
-  }, []);
+    } catch (error) {
+      console.error('Error fetching users: ', error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setLoading(true);
+      
+      // Set up real-time listener for notifications
+      const q = query(
+        collection(firestore, 'notifications'), 
+        orderBy('datetime', 'desc')
+      );
+
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const notificationsList = [];
+        querySnapshot.forEach((doc) => {
+          const notificationData = doc.data();
+          notificationsList.push({
+            id: doc.id,
+            userName: notificationData.userName,
+            user: notificationData.userEmail,
+            level: notificationData.level,
+            ppm: notificationData.ppm,
+            datetime: notificationData.datetime,
+            color: notificationData.color,
+            mobileNumber: notificationData.mobileNumber,
+          });
+        });
+
+        // Filter notifications based on selectedUserId
+        const filteredNotifications = selectedUserId === "ALL"
+          ? notificationsList // Show all notifications if "ALL" is selected
+          : selectedUserId
+          ? notificationsList.filter(notification => notification.user === selectedUserId)
+          : notificationsList; // Show all notifications if selectedUserId is null
+
+        setNotifications(filteredNotifications); // Set filtered notifications in state
+        setLoading(false);
+      }, (error) => {
+        setError('Failed to fetch notifications');
+        console.error('Error fetching notifications: ', error);
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
+    };
+
+    fetchNotifications();
+    fetchUsers(); // Call fetchUsers here
+  }, [selectedUserId]);
 
   const downloadExcel = async () => {
     try {
-      // Fetch notifications
-      const q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc'));
+      // Fetch notifications based on selectedUserId
+      let q;
+      if (selectedUserId) {
+        q = query(collection(firestore, 'notifications'), where('userEmail', '==', selectedUserId), orderBy('datetime', 'desc'));
+      } else {
+        q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc'));
+      }
       const querySnapshot = await getDocs(q);
       
       // Format data for Excel
@@ -91,15 +140,18 @@ const NotificationAdminScreen = () => {
         };
       });
 
-      // Create worksheet
+      // Check if there are any notifications to download
+      if (notificationsList.length === 0) {
+        Alert.alert('No Data', 'No notifications to download.');
+        return;
+      }
+
       const ws = XLSX.utils.json_to_sheet(notificationsList);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Notifications");
 
-      // Generate Excel file
       const wbout = XLSX.write(wb, { type: 'base64', bookType: "xlsx" });
       
-      // Create local file
       const fileName = `notifications_${new Date().getTime()}.xlsx`;
       const fileUri = `${FileSystem.documentDirectory}${fileName}`;
       
@@ -107,7 +159,6 @@ const NotificationAdminScreen = () => {
         encoding: FileSystem.EncodingType.Base64
       });
 
-      // Share the file
       await Sharing.shareAsync(fileUri, {
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         dialogTitle: 'Download Notifications Data'
@@ -146,10 +197,10 @@ const NotificationAdminScreen = () => {
 
   return (
     <View style={styles.container}>
+
       {/* Buttons with Icons */}
       <TouchableOpacity style={styles.downloadButton} onPress={downloadExcel}>
         <Ionicons name="download-outline" size={24} color="#fff" />
-        
       </TouchableOpacity>
       
       <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -161,9 +212,23 @@ const NotificationAdminScreen = () => {
       <Text style={styles.title}>Admin Notifications</Text>
       <View style={styles.divider} />
 
+      {/* Dropdown for selecting user email */}
+      <Picker
+        selectedValue={selectedUserId}
+        onValueChange={(itemValue) => setSelectedUserId(itemValue)}
+        style={{ height: 60, width: '100%' }}
+      >
+        <Picker.Item label="All Users" value={"ALL"} />
+        {users
+          .filter(user => user.email) 
+          .map((user) => (
+            <Picker.Item key={user.id} label={user.email} value={user.id} />
+          ))}
+      </Picker>
+
       {/* Notifications List */}
       <FlatList
-        data={notifications}
+        data={notifications} // Use filtered notifications
         keyExtractor={(item) => item.id} // Use the document ID as key
         renderItem={({ item }) => (
           <NotificationCard
