@@ -7,6 +7,7 @@ import RegisterScreen from './Register';
 import HomeScreen from './Home'; 
 import LoginAdminScreen from './LoginAdmin';
 import NotificationAdminScreen from './NotificationAdmin';
+import DataAnalyticsScreen from './DataAnalytics';
 import 'react-native-gesture-handler';
 
 const Stack = createStackNavigator();
@@ -44,6 +45,7 @@ function App() {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="LoginAdmin" component={LoginAdminScreen} />
           <Stack.Screen name="NotificationAdmin" component={NotificationAdminScreen} options={{ headerLeft: () => null }} />
+          <Stack.Screen name="DataAnalytics" component={DataAnalyticsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </ErrorBoundary>
