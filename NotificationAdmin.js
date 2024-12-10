@@ -227,21 +227,25 @@ const NotificationAdminScreen = () => {
       </Picker>
 
       {/* Notifications List */}
-      <FlatList
-        data={notifications} // Use filtered notifications
-        keyExtractor={(item) => item.id} // Use the document ID as key
-        renderItem={({ item }) => (
-          <NotificationCard
-            userName={item.userName}
-            user={item.user}
-            level={item.level}
-            ppm={item.ppm}
-            datetime={item.datetime}
-            color={item.color}
-            mobileNumber={item.mobileNumber}
-          />
-        )}
-      />
+      {notifications.length > 0 ? (
+        <FlatList
+          data={notifications} // Use filtered notifications
+          keyExtractor={(item) => item.id} // Use the document ID as key
+          renderItem={({ item }) => (
+            <NotificationCard
+              userName={item.userName}
+              user={item.user}
+              level={item.level}
+              ppm={item.ppm}
+              datetime={item.datetime}
+              color={item.color}
+              mobileNumber={item.mobileNumber}
+            />
+          )}
+        />
+      ) : (
+        <Text>No Warning or Danger levels in this account</Text>
+      )}
     </View>
   );
 };
