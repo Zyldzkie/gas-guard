@@ -256,7 +256,7 @@ const NotificationAdminScreen = () => {
           )}
         />
       ) : (
-        <Text>No Warning or Danger levels in this account</Text>
+        <Text style={{textAlign: 'center', fontWeight: 600,}}>No Warning or Danger levels in this account</Text>
       )}
     </View>
       </View>
