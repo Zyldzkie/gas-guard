@@ -43,7 +43,7 @@ function App() {
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="LoginAdmin" component={LoginAdminScreen} />
-          <Stack.Screen name="NotificationAdmin" component={NotificationAdminScreen} />
+          <Stack.Screen name="NotificationAdmin" component={NotificationAdminScreen} options={{ headerLeft: () => null }} />
         </Stack.Navigator>
       </NavigationContainer>
     </ErrorBoundary>
