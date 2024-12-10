@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,12 +15,15 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { auth } from './firebase.config';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
+  const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);  // State to toggle password visibility
-  const navigation = useNavigation();
+  const [rememberMe, setRememberMe] = useState(false);
+  
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,6 +46,16 @@ export default function LoginScreen() {
       Alert.alert('Password reset link has been sent to your email.');
     } catch (error) {
       Alert.alert('Error', error.message);
+    }
+  };
+
+  const toggleRememberMe = async () => {
+    const newValue = !rememberMe;
+    setRememberMe(newValue);
+    if (!newValue) {
+      // If unchecked, remove stored credentials
+      await AsyncStorage.removeItem('rememberedEmail');
+      await AsyncStorage.removeItem('rememberedPassword');
     }
   };
 
@@ -76,15 +89,38 @@ export default function LoginScreen() {
           'Your email is not verified. A verification link has been sent to your email. Please verify your email before logging in.'
         );
         return;
+      } else {
+        if (rememberMe) {
+          // Store credentials if Remember Me is checked
+          await AsyncStorage.setItem('rememberedEmail', trimmedEmail);
+          await AsyncStorage.setItem('rememberedPassword', trimmedPassword);
+        }
+        Alert.alert('Successfully Logged In.');
+        navigation.navigate('Home');
       }
-
-      Alert.alert('Successfully Logged In.');
-      navigation.navigate('Home');
     } catch (error) {
       console.error(error);
       Alert.alert('Login Failed.', error.message);
     }
   };
+
+  useEffect(() => {
+    const checkStoredCredentials = async () => {
+      try {
+        const storedEmail = await AsyncStorage.getItem('rememberedEmail');
+        const storedPassword = await AsyncStorage.getItem('rememberedPassword');
+        if (storedEmail && storedPassword) {
+          setEmail(storedEmail);
+          setPassword(storedPassword);
+          setRememberMe(true);
+        }
+      } catch (error) {
+        console.error('Error checking stored credentials:', error);
+      }
+    };
+    
+    checkStoredCredentials();
+  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -124,10 +160,20 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Forgot Password */}
-        <TouchableOpacity onPress={handlePasswordReset}>
-          <Text style={styles.forgotPassword}>Forgot Password?</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around', width: '100%' }}>
+          {/* Remember Me */}
+          <View style={styles.rememberMeContainer}>
+            <TouchableOpacity onPress={toggleRememberMe}>
+              <Icon name={rememberMe ? 'checkbox-marked' : 'checkbox-blank-outline'} size={24} color="#ff0000" />
+            </TouchableOpacity>
+            <Text style={styles.rememberMeText}>Remember Me</Text>
+          </View>
+
+          {/* Forgot Password */}
+          <TouchableOpacity onPress={handlePasswordReset}>
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Login Button */}
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
@@ -228,5 +274,14 @@ const styles = StyleSheet.create({
     color: '#007ACC',
     fontWeight: 'bold',
     marginTop: 20,
+  },
+  rememberMeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  rememberMeText: {
+    color: '#000',
+    marginLeft: 10,
   },
 });
