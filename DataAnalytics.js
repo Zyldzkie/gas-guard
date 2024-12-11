@@ -80,8 +80,6 @@ const DataAnalyticsScreen = () => {
       };
     });
 
-  
-
     if (selectedUserId) {
       const foundUser = combinedData.find(user => {
         const normalizedUserId = user.userId.trim().toLowerCase();
@@ -99,39 +97,24 @@ const DataAnalyticsScreen = () => {
       setSelectedUserData([]); // Reset if no user is selected
     }
 
+    // Prepare chart data by month
+    const monthlyData = selectedUserData.reduce((acc, item) => {
+      const month = item.datetime.toDate().toLocaleString('default', { month: 'short' });
+      if (!acc[month]) {
+        acc[month] = { totalPpm: 0, count: 0 };
+      }
+      acc[month].totalPpm += item.ppm;
+      acc[month].count += 1;
+      return acc;
+    }, {});
 
-
-    // Filter out notifications older than today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0); // Start of today
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999); // End of today
-
-
-
-    const recentData = selectedUserData.filter(item => {
-        const itemDate = item.datetime.toDate();
-
-        return itemDate >= todayStart && itemDate <= todayEnd;
-    });
-
-    setRecentData(recentData);
-
-
-
-
-
-    const chartData = recentData
-        .map(item => {
-        
-            return {
-                datetime: item.datetime.toDate(), 
-                ppm: item.ppm,
-            };
-        })
-        .sort((a, b) => b.datetime - a.datetime) // Sort from most recent to oldest
-        .slice(0, 7) // Limit to the last 7 entries
-        .reverse(); // Reverse the order to have the oldest on the left
+    const chartData = Object.entries(monthlyData)
+      .map(([month, { totalPpm, count }]) => ({
+        month,
+        avgPpm: totalPpm / count, // Calculate average PPM
+      }))
+      .sort((a, b) => new Date(Date.parse(a.month + " 1")) - new Date(Date.parse(b.month + " 1"))) // Sort by month
+      .reverse(); // Reverse the sorted array to get the data in reverse order
 
     setChartData(chartData);
 
@@ -159,16 +142,16 @@ const DataAnalyticsScreen = () => {
       {chartData.length > 0 && (
         <View style={styles.graphContainer}>
           <Text style={styles.subtitle}>
-            {`Warning/Danger History \n of ${selectedUserId === null ? "All Users" : users.find(user => user.id === selectedUserId)?.email} \n (Day)`}
+            {`Warning/Danger History \n of ${selectedUserId === null ? "All Users" : users.find(user => user.id === selectedUserId)?.email} \n (Monthly)`}
           </Text>
           <LineChart
             data={{
               labels: chartData.map(data => 
-                data.datetime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Format time without seconds
+                data.month // Format month without year
               ), 
               datasets: [
                 {
-                  data: chartData.map(data => data.ppm), // PPM values for the selected user
+                  data: chartData.map(data => data.avgPpm), // PPM values for the selected user
                   strokeWidth: 2,
                   labelFontSize: 2,
                 },
