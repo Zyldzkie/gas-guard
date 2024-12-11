@@ -51,7 +51,7 @@ const DataAnalyticsScreen = () => {
             mobileNumber: notificationData.mobileNumber,
           });
         });
-        console.log(notificationsList);
+    
         setNotifications(notificationsList);
       });
 
@@ -77,7 +77,7 @@ const DataAnalyticsScreen = () => {
       };
     });
 
-    console.log('Combined Data:', combinedData); // Log combined data structure
+  
 
     if (selectedUserId) {
       const foundUser = combinedData.find(user => {
@@ -88,7 +88,7 @@ const DataAnalyticsScreen = () => {
 
       if (foundUser) {
         setSelectedUserData(foundUser.data); // Update state with found user data
-        console.log("Found user data:", foundUser.data); // Log found user data
+        
       } else {
         setSelectedUserData([]); // Reset if no user found
       }
@@ -96,7 +96,7 @@ const DataAnalyticsScreen = () => {
       setSelectedUserData([]); // Reset if no user is selected
     }
 
-    console.log('Selected User Data:', selectedUserData); 
+
 
     // Filter out notifications older than today
     const todayStart = new Date();
@@ -104,32 +104,31 @@ const DataAnalyticsScreen = () => {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999); // End of today
 
-    console.log('Today Start:', todayStart); // Debugging line
-    console.log('Today End:', todayEnd); // Debugging line
-    console.log('Selected User Data:', selectedUserData); // Debugging line
+
 
     const recentData = selectedUserData.filter(item => {
         const itemDate = item.datetime.toDate();
-        console.log('Item Datetime:', itemDate); // Log each item's datetime
-        console.log('Is item within today range?', itemDate >= todayStart && itemDate <= todayEnd); // Check if within range
+
         return itemDate >= todayStart && itemDate <= todayEnd;
     });
 
     setRecentData(recentData);
 
 
-    console.log('Recent Data:', recentData); 
+
 
 
     const chartData = recentData
         .map(item => {
-            console.log(item.datetime.toDate());
+        
             return {
                 datetime: item.datetime.toDate(), 
                 ppm: item.ppm,
             };
         })
-        .slice(-7); // Limit to the last 10 entries
+        .sort((a, b) => b.datetime - a.datetime) // Sort from most recent to oldest
+        .slice(0, 7) // Limit to the last 7 entries
+        .reverse(); // Reverse the order to have the oldest on the left
 
     setChartData(chartData);
 
