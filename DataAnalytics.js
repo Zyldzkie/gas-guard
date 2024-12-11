@@ -5,6 +5,7 @@ import { LineChart } from 'react-native-chart-kit';
 import { collection, getDocs, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { firestore } from './firebase.config'; // Ensure you have the correct imports
 import { it } from 'date-fns/locale';
+import useNotifTest from './testNotif';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -16,6 +17,8 @@ const DataAnalyticsScreen = () => {
 
   const [selectedUserData, setSelectedUserData] = useState([]);
   const [recentData, setRecentData] = useState([]);
+
+  useNotifTest();
 
   useEffect(() => {
     const fetchUsers = async () => {
