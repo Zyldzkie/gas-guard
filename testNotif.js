@@ -36,19 +36,21 @@ const useNotifTest = () => {
               const dangerThreshold = dangerThreshSnapshot.val() || 400; 
 
               const userEmail = auth.currentUser.email;
-              const datetime = new Date().toLocaleString('en-US', {
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true,
-              });
+
+
+              // const datetime = new Date().toLocaleString('en-US', {
+              //   month: 'short',
+              //   day: '2-digit',
+              //   year: 'numeric',
+              //   hour: '2-digit',
+              //   minute: '2-digit',
+              //   second: '2-digit',
+              //   hour12: true,
+              // });
 
               let notification = {
                 color: '',
-                datetime: `${datetime}`,
+                datetime: new Date(),
                 level: '',
                 ppm: value,
                 userEmail,
@@ -74,7 +76,7 @@ const useNotifTest = () => {
       
 
               try {
-                const notificationsCollection = collection(firestore, 'notifications');
+                const notificationsCollection = collection(firestore, 'notifications1');
                 await addDoc(notificationsCollection, notification);
                 console.log('Notification added:', notification);
               } catch (error) {

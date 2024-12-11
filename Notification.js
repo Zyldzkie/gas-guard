@@ -37,7 +37,7 @@ const Notification = () => {
 
     // Set up a real-time listener for notifications
     const notificationsQuery = query(
-      collection(firestore, 'notifications'),
+      collection(firestore, 'notifications1'),
       where('userEmail', '==', currentUserEmail),
       orderBy('datetime', 'desc')
     );
@@ -50,7 +50,14 @@ const Notification = () => {
           id: doc.id,
           level: notificationData.level,
           ppm: notificationData.ppm,
-          datetime: notificationData.datetime,
+          datetime: notificationData.datetime.toDate().toLocaleString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true}),
           color: notificationData.color,
         });
       });

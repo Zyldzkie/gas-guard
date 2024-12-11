@@ -1,94 +1,174 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, ScrollView, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { LineChart } from 'react-native-chart-kit';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { signOut } from 'firebase/auth'; // Import signOut from auth
-import Ionicons from 'react-native-vector-icons/Ionicons';
-
-const Tab = createBottomTabNavigator();
+import { collection, getDocs, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { firestore } from './firebase.config'; // Ensure you have the correct imports
+import { it } from 'date-fns/locale';
 
 const screenWidth = Dimensions.get('window').width;
 
-const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      navigation.navigate('Login');
-    } catch (error) {
-      console.error('Error signing out: ', error);
-    }
-  };
-
-  const handleDataAnalytics = async () => {
-    try {
-      await signOut(auth);
-      navigation.navigate('DataAnalytics');
-    } catch (error) {
-      console.error('Error switching to Analytics Screen: ', error);
-    }
-  };
-
 const DataAnalyticsScreen = () => {
-  const [selectedUserId, setSelectedUserId] = useState("ALL");
+  const [selectedUserId, setSelectedUserId] = useState(null); // Default to null
   const [users, setUsers] = useState([]);
-  const [gasData, setGasData] = useState({});
+  const [notifications, setNotifications] = useState([]);
+  const [chartData, setChartData] = useState([]);
 
-  // Dummy data for testing (comment out once integrated with the backend)
+  const [selectedUserData, setSelectedUserData] = useState([]);
+  const [recentData, setRecentData] = useState([]);
+
   useEffect(() => {
-    const dummyUsers = [
-      { id: "1", email: "user1@example.com" },
-      { id: "2", email: "user2@example.com" },
-    ];
-
-    const dummyGasData = {
-      "1": [10, 12, 15, 20, 18, 25, 22], // User 1's gas data
-      "2": [8, 9, 14, 13, 17, 19, 21], // User 2's gas data
+    const fetchUsers = async () => {
+      const usersQuery = query(collection(firestore, 'users'));
+      const querySnapshot = await getDocs(usersQuery);
+      const usersList = [];
+      querySnapshot.forEach((doc) => {
+        const userData = doc.data();
+        usersList.push({
+          id: doc.id,
+          email: userData.email,
+          mobileNumber: userData.mobileNumber,
+          isAdmin: userData.isAdmin,
+        });
+      });
+      setUsers(usersList);
     };
 
-    setUsers(dummyUsers);
-    setGasData(dummyGasData);
-  }, []);
+    const fetchNotifications = async () => {
+      const notificationsQuery = query(collection(firestore, 'notifications1'), orderBy('datetime', 'desc'));
+      const unsubscribe = onSnapshot(notificationsQuery, (querySnapshot) => {
+        const notificationsList = [];
+        querySnapshot.forEach((doc) => {
+          const notificationData = doc.data();
+          notificationsList.push({
+            id: doc.id,
+            userName: notificationData.userName,
+            user: notificationData.userEmail,
+            level: notificationData.level,
+            ppm: notificationData.ppm,
+            datetime: notificationData.datetime, 
+            color: notificationData.color,
+            mobileNumber: notificationData.mobileNumber,
+          });
+        });
+        console.log(notificationsList);
+        setNotifications(notificationsList);
+      });
 
-  // Filtered data for the selected user
-  const selectedUserData =
-    selectedUserId !== "ALL" && gasData[selectedUserId]
-      ? gasData[selectedUserId]
-      : [];
+      return () => unsubscribe();
+    };
+
+    fetchUsers();
+    fetchNotifications();
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    // Combine user data with notifications for chart data
+    const combinedData = users.map(user => {
+      const userNotifications = notifications.filter(notification => notification.user === user.email);
+      
+      return {
+        userId: user.id,
+        email: user.email,
+        data: userNotifications.map(notification => ({
+          datetime: notification.datetime, 
+          ppm: notification.ppm,
+        })),
+      };
+    });
+
+    console.log('Combined Data:', combinedData); // Log combined data structure
+
+    if (selectedUserId) {
+      const foundUser = combinedData.find(user => {
+        const normalizedUserId = user.userId.trim().toLowerCase();
+        const normalizedSelectedId = selectedUserId.trim().toLowerCase();
+        return normalizedUserId === normalizedSelectedId;
+      });
+
+      if (foundUser) {
+        setSelectedUserData(foundUser.data); // Update state with found user data
+        console.log("Found user data:", foundUser.data); // Log found user data
+      } else {
+        setSelectedUserData([]); // Reset if no user found
+      }
+    } else {
+      setSelectedUserData([]); // Reset if no user is selected
+    }
+
+    console.log('Selected User Data:', selectedUserData); 
+
+    // Filter out notifications older than today
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0); // Start of today
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999); // End of today
+
+    console.log('Today Start:', todayStart); // Debugging line
+    console.log('Today End:', todayEnd); // Debugging line
+    console.log('Selected User Data:', selectedUserData); // Debugging line
+
+    const recentData = selectedUserData.filter(item => {
+        const itemDate = item.datetime.toDate();
+        console.log('Item Datetime:', itemDate); // Log each item's datetime
+        console.log('Is item within today range?', itemDate >= todayStart && itemDate <= todayEnd); // Check if within range
+        return itemDate >= todayStart && itemDate <= todayEnd;
+    });
+
+    setRecentData(recentData);
+
+
+    console.log('Recent Data:', recentData); 
+
+
+    const chartData = recentData
+        .map(item => {
+            console.log(item.datetime.toDate());
+            return {
+                datetime: item.datetime.toDate(), 
+                ppm: item.ppm,
+            };
+        })
+        .slice(-7); // Limit to the last 10 entries
+
+    setChartData(chartData);
+
+  }, [users, notifications, selectedUserId]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-        <Image source={require('./assets/logo.png')} style={styles.logo} />
-        <Text style={styles.title}>Data Analytics</Text>
-        <View style={styles.divider} />
-      {/* Picker for selecting user */}
+      <Image source={require('./assets/logo.png')} style={styles.logo} />
+      <Text style={styles.title}>Data Analytics</Text>
+      <View style={styles.divider} />
       <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={selectedUserId}
-            onValueChange={(itemValue) => setSelectedUserId(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="All Users" value={"ALL"} />
-            {users
-              .filter(user => user.email)
-              .map((user) => (
-                <Picker.Item key={user.id} label={user.email} value={user.id} />
-              ))}
-          </Picker>
-        </View>
+        <Picker
+          selectedValue={selectedUserId}
+          onValueChange={(itemValue) => setSelectedUserId(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Choose a user" value={null} />
+          {users.map((user) => (
+            <Picker.Item key={user.id} label={user.email} value={user.id} />
+          ))}
+        </Picker>
+      </View>
 
       {/* Line Chart for selected user's gas detection */}
-      {selectedUserId !== "ALL" && selectedUserData.length > 0 && (
+      {chartData.length > 0 && (
         <View style={styles.graphContainer}>
           <Text style={styles.subtitle}>
-            {`Gas Detection for ${users.find(user => user.id === selectedUserId)?.email}`}
+            {`Warning/Danger History \n of ${selectedUserId === null ? "All Users" : users.find(user => user.id === selectedUserId)?.email} \n (Day)`}
           </Text>
           <LineChart
             data={{
-              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // Days of the week
+              labels: chartData.map(data => 
+                data.datetime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) // Format time without seconds
+              ), 
               datasets: [
                 {
-                  data: selectedUserData, // Gas values for the selected user
+                  data: chartData.map(data => data.ppm), // PPM values for the selected user
                   strokeWidth: 2,
+                  labelFontSize: 2,
                 },
               ],
             }}
@@ -101,6 +181,7 @@ const DataAnalyticsScreen = () => {
               color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
               strokeWidth: 2,
+              labelFontSize: 10,
             }}
             style={styles.chart}
           />
@@ -108,18 +189,14 @@ const DataAnalyticsScreen = () => {
       )}
 
       {/* Message if no user is selected or no data available */}
-      {selectedUserId !== "ALL" && selectedUserData.length === 0 && (
+      {chartData.length === 0 && (
         <Text style={styles.noDataText}>
           No data available for the selected user.
         </Text>
       )}
-
-
     </ScrollView>
   );
 };
-
-export default DataAnalyticsScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -141,13 +218,11 @@ const styles = StyleSheet.create({
   graphContainer: {
     marginBottom: 20,
   },
-  
   logo: {
     width: 120,
     height: 120,
     alignSelf: 'center',
     marginTop: 0,
-    
   },
   title: {
     fontSize: 24,
@@ -248,3 +323,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 });
+
+export default DataAnalyticsScreen;

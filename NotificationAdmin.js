@@ -64,7 +64,7 @@ const NotificationAdminScreen = () => {
           isAdmin: userData.isAdmin,
         });
       });
-      console.log('Users List:', usersList); // Debugging line
+     
       return usersList;
 
     } catch (error) {
@@ -79,7 +79,7 @@ const NotificationAdminScreen = () => {
       
       // Set up real-time listener for notifications
       const q = query(
-        collection(firestore, 'notifications'), 
+        collection(firestore, 'notifications1'), 
         orderBy('datetime', 'desc')
       );
 
@@ -93,7 +93,14 @@ const NotificationAdminScreen = () => {
             user: notificationData.userEmail,
             level: notificationData.level,
             ppm: notificationData.ppm,
-            datetime: notificationData.datetime,
+            datetime: notificationData.datetime.toDate().toLocaleString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true}),
             color: notificationData.color,
             mobileNumber: notificationData.mobileNumber,
           });
@@ -126,9 +133,9 @@ const NotificationAdminScreen = () => {
       // Fetch notifications based on selectedUserId
       let q;
       if (selectedUserId) {
-        q = query(collection(firestore, 'notifications'), where('userEmail', '==', selectedUserId), orderBy('datetime', 'desc'));
+        q = query(collection(firestore, 'notifications1'), where('userEmail', '==', selectedUserId), orderBy('datetime', 'desc'));
       } else {
-        q = query(collection(firestore, 'notifications'), orderBy('datetime', 'desc'));
+        q = query(collection(firestore, 'notifications1'), orderBy('datetime', 'desc'));
       }
       const querySnapshot = await getDocs(q);
       
