@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, FlatList, ActivityIndicator, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { collection, getDocs, orderBy, query, onSnapshot, where } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, onSnapshot, where, updateDoc, doc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { firestore, auth } from './firebase.config'; // Import firestore from config
 import useNotifTest from './testNotif';
@@ -183,6 +183,15 @@ const NotificationAdminScreen = () => {
   };
 
   const handleSignOut = async () => {
+
+    try {
+      await updateDoc(doc(firestore, 'users', auth.currentUser.email), {
+        isActive: false, 
+      });
+    } catch (error) {
+      console.error('Error updating user activity:', error);
+    }
+
     try {
       await signOut(auth);
       navigation.navigate('Login');
@@ -193,7 +202,6 @@ const NotificationAdminScreen = () => {
 
   const handleDataAnalytics = async () => {
     try {
-      await signOut(auth);
       navigation.navigate('DataAnalytics');
     } catch (error) {
       console.error('Error switching to Analytics Screen: ', error);

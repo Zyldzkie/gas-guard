@@ -13,9 +13,10 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { auth } from './firebase.config';
+import { auth, firestore } from './firebase.config';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -96,6 +97,16 @@ export default function LoginScreen() {
           await AsyncStorage.setItem('rememberedPassword', trimmedPassword);
         }
         Alert.alert('Successfully Logged In.');
+        
+        try {
+          await updateDoc(doc(firestore, 'users', trimmedEmail), {
+            isActive: true, 
+          });
+          console.log(trimmedEmail + " is active")
+        } catch (error) {
+          console.error('Error updating user activity:', error);
+        }
+
         navigation.navigate('Home');
       }
     } catch (error) {

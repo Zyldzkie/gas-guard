@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, AppState } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './Login';
@@ -8,36 +8,52 @@ import HomeScreen from './Home';
 import LoginAdminScreen from './LoginAdmin';
 import NotificationAdminScreen from './NotificationAdmin';
 import DataAnalyticsScreen from './DataAnalytics';
+import { auth, firestore } from './firebase.config'; 
+import { doc, updateDoc } from 'firebase/firestore';
 import 'react-native-gesture-handler';
 
 const Stack = createStackNavigator();
 
-class ErrorBoundary extends React.Component {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
+const updateUserActivity = async (userId, isActive) => {
+  try {
+    await updateDoc(doc(firestore, 'users', userId), {
+      isActive: isActive, 
+    });
+  } catch (error) {
+    console.error('Error updating user activity:', error);
   }
+};
 
-  componentDidCatch(error, errorInfo) {
-    console.log('Navigation error:', error, errorInfo);
-  }
+const UserActivityTracker = ({ children }) => {
+  const [appState, setAppState] = useState(AppState.currentState);
 
-  render() {
-    if (this.state.hasError) {
-      return (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text>Something went wrong!</Text>
-        </View>
-      );
-    }
-    return this.props.children;
-  }
-}
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (appState.match(/inactive|background/) && nextAppState === 'active') {
+        // App has come to the foreground
+        if (auth.currentUser) {
+          updateUserActivity(auth.currentUser.email, true); // Set isActive to true
+        }
+      } else if (nextAppState === 'background') {
+        // App is going to the background
+        if (auth.currentUser) {
+          updateUserActivity(auth.currentUser.email, false); // Set isActive to false
+        }
+      }
+      setAppState(nextAppState);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [appState]);
+
+  return <>{children}</>; // Render the children components
+};
 
 function App() {
   return (
-    <ErrorBoundary>
+    <UserActivityTracker>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Login">
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerLeft: () => null }} />
@@ -48,7 +64,7 @@ function App() {
           <Stack.Screen name="DataAnalytics" component={DataAnalyticsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
-    </ErrorBoundary>
+    </UserActivityTracker>
   );
 }
 

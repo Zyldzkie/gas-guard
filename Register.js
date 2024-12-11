@@ -74,6 +74,7 @@ export default function RegisterScreen() {
         createdAt: new Date().toISOString(),
         hardwareId: null,
         isAdmin: false,
+        isActive: true
       });
 
       Alert.alert('Success', 'Registration successful. Please verify your email before logging in.');

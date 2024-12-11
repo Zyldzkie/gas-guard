@@ -119,6 +119,15 @@ const HomeScreen = () => {
   };
 
   const handleSignOut = async () => {
+
+    try {
+      await updateDoc(doc(firestore, 'users', auth.currentUser.email), {
+        isActive: false, 
+      });
+    } catch (error) {
+      console.error('Error updating user activity:', error);
+    }
+
     try {
       await signOut(auth);
       navigation.navigate('Login');

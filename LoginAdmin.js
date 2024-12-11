@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { auth, firestore } from './firebase.config';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default function LoginAdminScreen() {
   const [email, setEmail] = useState('');
@@ -89,6 +89,17 @@ export default function LoginAdminScreen() {
       }
 
       Alert.alert('Successfully Logged In.');
+
+           
+      try {
+        await updateDoc(doc(firestore, 'users', trimmedEmail), {
+          isActive: true, 
+        });
+        console.log(trimmedEmail + " is active")
+      } catch (error) {
+        console.error('Error updating user activity:', error);
+      }
+
       navigation.navigate('NotificationAdmin');
     } catch (error) {
       console.error(error);
