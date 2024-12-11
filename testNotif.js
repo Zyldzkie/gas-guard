@@ -3,10 +3,25 @@ import { ref, onValue, get } from 'firebase/database';
 import { db } from './firebase.config';
 import { auth, firestore } from './firebase.config';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
+import { Audio } from 'expo-av';
 
 const useNotifTest = () => {
   useEffect(() => {
     let unsubscribeGas;
+
+    const playNotificationSound = async () => {
+      try {
+        const { sound } = await Audio.Sound.createAsync(require('./notif.mp3')); // Load sound file
+        await sound.playAsync(); // Play the sound
+        sound.setOnPlaybackStatusUpdate((status) => {
+          if (status.didJustFinish) {
+            sound.unloadAsync(); // Unload the sound when finished
+          }
+        });
+      } catch (error) {
+        console.error('Error playing sound:', error);
+      }
+    };
 
     const fetchGasLevel = async () => {
       if (!auth.currentUser) {
@@ -25,15 +40,14 @@ const useNotifTest = () => {
           unsubscribeGas = onValue(gasRef, async (snapshot) => {
             const value = snapshot.val();
             if (value !== null) {
-      
               const warningThreshRef = ref(db, `${fetchedHardwareId}/warningThresh`);
               const dangerThreshRef = ref(db, `${fetchedHardwareId}/dangerThresh`);
-    
+
               const warningThreshSnapshot = await get(warningThreshRef);
               const dangerThreshSnapshot = await get(dangerThreshRef);
-              
-              const warningThreshold = warningThreshSnapshot.val() || 300; 
-              const dangerThreshold = dangerThreshSnapshot.val() || 400; 
+
+              const warningThreshold = warningThreshSnapshot.val() || 300;
+              const dangerThreshold = dangerThreshSnapshot.val() || 400;
 
               const userEmail = auth.currentUser.email;
 
@@ -57,23 +71,20 @@ const useNotifTest = () => {
                 mobileNumber: userDoc.data().mobileNumber,
               };
 
-              
               if (value >= dangerThreshold) {
-                notification.color = '#FF0000'; 
+                notification.color = '#FF0000';
                 notification.level = 'Danger';
                 console.log('Danger threshold reached');
+                playNotificationSound(); // Play sound for danger
               } else if (value >= warningThreshold) {
-                notification.color = '#FFC000'; 
+                notification.color = '#FFC000';
                 notification.level = 'Warning';
                 console.log('Warning threshold reached');
+                playNotificationSound(); // Play sound for warning
               } else {
                 console.log('Gas level is safe; no notification added.');
                 return;
               }
-
-              
-
-      
 
               try {
                 const notificationsCollection = collection(firestore, 'notifications1');
