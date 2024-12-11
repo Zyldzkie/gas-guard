@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "878742388247",
+    "project_id": "gas-sensor-new-79b87",
+    "storage_bucket": "gas-sensor-new-79b87.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878742388247:android:7ece91bb3b50b3f75c6652",
+        "android_client_info": {
+          "package_name": "com.gasguard.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiiBVW7hWqKSd0GiLAuk5b04lBK1-pYrk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

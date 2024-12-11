@@ -4,13 +4,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDQlMozGGzcTU47CAUv9XKQFTX-TOUDe70",
-  authDomain: "gas-guard-5f836.firebaseapp.com",
-  projectId: "gas-guard-5f836",
-  storageBucket: "gas-guard-5f836.firebasestorage.app",
-  messagingSenderId: "707700442055",
-  appId: "1:707700442055:android:abe83a7fd5355fd52bcfe2",
-  databaseURL: 'https://gas-guard-5f836-default-rtdb.asia-southeast1.firebasedatabase.app'
+  apiKey: "AIzaSyCiiBVW7hWqKSd0GiLAuk5b04lBK1-pYrk",
+  authDomain: "gas-sensor-new-79b87.firebaseapp.com",
+  projectId: "gas-sensor-new-79b87",
+  storageBucket: "gas-sensor-new-79b87.firebasestorage.app",
+  messagingSenderId: "878742388247",
+  appId: "1:878742388247:android:7ece91bb3b50b3f75c6652",
+  databaseURL: 'https://gas-sensor-new-79b87-default-rtdb.asia-southeast1.firebasedatabase.app'
 };
 
 
