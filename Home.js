@@ -130,36 +130,37 @@ const HomeScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 150}
+    <ScrollView
+      contentContainerStyle={styles.scrollViewContainer}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <MaterialIcons name="logout" size={24} color="#fff" />
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        <MaterialIcons name="logout" size={24} color="#fff" />
+      </TouchableOpacity>
 
-        <Image source={require('./assets/logo.png')} style={styles.logo} />
-        <Text style={styles.title}>Current Gas Level:</Text>
-        <View style={styles.divider} />
-        <View style={styles.gasLevelBox}>
-          <Text style={styles.gasLevel}>{gasLevel}</Text>
-          <Text style={styles.unit}>ppm</Text>
-        </View>
-        <Text style={styles.level}>
-          Level: <Text style={[styles.status, styles[levelStatus.toLowerCase()]]}>{levelStatus}</Text>
+      <Image source={require('./assets/logo.png')} style={styles.logo} />
+      <Text style={styles.title}>Current Gas Level:</Text>
+      <View style={styles.divider} />
+      <View style={styles.gasLevelBox}>
+        <Text style={styles.gasLevel}>{gasLevel}</Text>
+        <Text style={styles.unit}>ppm</Text>
+      </View>
+      <Text style={styles.level}>
+        Level: <Text style={[styles.status, styles[levelStatus.toLowerCase()]]}>{levelStatus}</Text>
+      </Text>
+      <Text style={styles.connectionStatus}>
+        Connection Status:{' '}
+        <Text style={{ fontWeight: 'bold', color: connectionStatus === 'Online' ? 'green' : 'red' }}>
+          {connectionStatus}
         </Text>
-        <Text style={styles.connectionStatus}>
-          Connection Status:{' '}
-          <Text style={{ fontWeight: 'bold', color: connectionStatus === 'Online' ? 'green' : 'red' }}>
-            {connectionStatus}
-          </Text>
-        </Text>
+      </Text>
+      
+      <KeyboardAvoidingView
+        style={{ width: '100%' }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+       
+      >
         <View style={styles.hardwareContainer}>
           <TextInput
             style={styles.hardwareInput}
@@ -172,8 +173,8 @@ const HomeScreen = () => {
             <Button title={isEditing ? 'Save' : 'Edit'} onPress={isEditing ? updateHardwareId : toggleEdit} color="#007ACC" />
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
