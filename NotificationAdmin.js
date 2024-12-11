@@ -11,6 +11,7 @@ import { signOut } from 'firebase/auth'; // Import signOut from auth
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons for icons
 import { Picker } from '@react-native-picker/picker'; 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import UserCount from './UserCount';
 import { MaterialIcons } from '@expo/vector-icons';
 
 
@@ -230,6 +231,7 @@ const NotificationAdminScreen = () => {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <UserCount/>
       <View style={styles.container}>
         
         {/* Logo */}

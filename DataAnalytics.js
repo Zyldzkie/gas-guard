@@ -6,6 +6,7 @@ import { collection, getDocs, query, orderBy, onSnapshot } from 'firebase/firest
 import { firestore } from './firebase.config'; // Ensure you have the correct imports
 import { it } from 'date-fns/locale';
 import useNotifTest from './testNotif';
+import UserCount from './UserCount';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -122,6 +123,7 @@ const DataAnalyticsScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <UserCount/>
       <Image source={require('./assets/logo.png')} style={styles.logo} />
       <Text style={styles.title}>Data Analytics</Text>
       <View style={styles.divider} />
