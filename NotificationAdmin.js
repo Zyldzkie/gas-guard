@@ -229,6 +229,8 @@ const NotificationAdminScreen = () => {
         <Text style={styles.title}>Admin Notifications</Text>
         <View style={styles.divider} />
 
+
+
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={selectedUserId}
@@ -241,6 +243,7 @@ const NotificationAdminScreen = () => {
               .map((user) => (
                 <Picker.Item key={user.id} label={user.email} value={user.id} />
               ))}
+
           </Picker>
         </View>
 
@@ -431,14 +434,14 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   pickerContainer: {
+    marginTop: 50,
     zIndex: 3,
-    
-    marginBottom: 10,
+
     
   },
   notificationList: {
     flex: 1, // Ensures the FlatList takes the remaining space
-    marginTop: 10, // Adds spacing between the picker and the notifications list
+    // Adds spacing between the picker and the notifications list
     // borderWidth: 2,
     // borderColor: '000',
   },
