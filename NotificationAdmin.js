@@ -144,12 +144,19 @@ const NotificationAdminScreen = () => {
       const notificationsList = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
-          'User Name': data.userName,
           'Email': data.userEmail,
           'Mobile Number': data.mobileNumber,
           'Level': data.level,
           'PPM': data.ppm,
-          'Date & Time': data.datetime,
+          'Date & Time': data.datetime.toDate().toLocaleString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          }),
         };
       });
 
